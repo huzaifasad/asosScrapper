@@ -17,6 +17,7 @@
 /.next/
 /out/
 /working
+nodescripts/working/
 
 # production
 /build
