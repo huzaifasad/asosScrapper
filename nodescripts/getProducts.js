@@ -1,18 +1,12 @@
 import 'dotenv/config';
-import { createClient } from '@supabase/supabase-js';
+import { Client } from 'pg';
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const client = new Client({
+  connectionString: process.env.SUPABASE_DB_URL, // your Postgres connection string
+});
 
-async function getProducts() {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*');   // fetch all rows & all columns
+await client.connect();
+await client.query(`NOTIFY pgrst, 'reload schema'`);
+await client.end();
 
-  if (error) {
-    console.error("❌ Fetch error:", error);
-  } else {
-    console.log("✅ Products:", data);
-  }
-}
-
-getProducts();
+console.log("✅ Schema cache reloaded");

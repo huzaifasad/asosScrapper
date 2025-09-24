@@ -10,6 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Loader2,
@@ -262,28 +268,46 @@ export default function ScraperPage() {
 
   useEffect(() => {
     fetchProductsFromDB()
+    // fetchTables()
   }, [currentPage])
 
   const fetchProductsFromDB = async () => {
     setLoading(true)
 
-    const { count } = await supabase.from("products").select("*", { count: "exact", head: true })
+    const { count } = await supabase.from("zara_cloth").select("*", { count: "exact", head: true })
     setTotalProducts(count || 0)
 
     const { data, error } = await supabase
-      .from("products")
+      .from("zara_cloth")
       .select("*")
       .order("created_at", { ascending: false })
       .range((currentPage - 1) * productsPerPage, currentPage * productsPerPage - 1)
-
+    
     if (error) {
       console.error("Supabase fetch error:", error.message)
       setError(error.message)
     } else {
+      console.log('data from the thing is \n',data)
       setDbProducts(data)
     }
     setLoading(false)
   }
+
+const fetchTables = async () => {
+  const { data, error } = await supabase
+    .from("information_schema.tables")
+    .select("table_name")
+    .eq("table_schema", "public");
+   
+
+  if (error) {
+    console.error("Error fetching tables:", error.message);
+  } else {
+    console.log("Tables in public schema:", data);
+  }
+};
+
+
 
   const handleScrape = async () => {
     if (scrapingMode === "search" && !searchTerm.trim()) {
@@ -469,108 +493,153 @@ export default function ScraperPage() {
       </div>
     )
   }
+const renderProductMaterials = (product) => {
+  if (!product.materials || product.materials.length === 0) return null
+
+  return (
+    <div className="space-y-1 mt-1">
+      {product.materials.map((mat, index) => {
+        let parsed
+        try {
+          parsed = JSON.parse(mat)
+        } catch {
+          parsed = { description: mat } // fallback if not JSON
+        }
+
+        // Split by newlines (\n) and render each line separately
+        return (
+          <div key={index} className="text-sm text-slate-600 dark:text-slate-400 leading-snug">
+            {parsed.description
+              .split(/\n+/)
+              .filter((line) => line.trim() !== "")
+              .map((line, i) => (
+                <p key={i}>{line}</p>
+              ))}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
   // Continue with existing render functions for product display, pagination, etc.
-  const renderProductImages = (product) => {
-    if (!product.images) return null
+const renderProductImages = (product) => {
+  if (!product.images) return null
 
-    const imageArray = Array.isArray(product.images) ? product.images : [product.images]
-    const currentIndex = currentImageIndex[product.id] || 0
-    const currentImage = imageArray[currentIndex] || imageArray[0]
+  // 🟢 Fix: normalize images into array of URLs
+  let parsedImages
+  try {
+    parsedImages = typeof product.images === "string"
+      ? JSON.parse(product.images) // if stringified JSON
+      : product.images
+  } catch {
+    parsedImages = []
+  }
 
-    const nextImage = () => {
-      setCurrentImageIndex((prev) => ({
-        ...prev,
-        [product.id]: (currentIndex + 1) % imageArray.length,
-      }))
-    }
+  // convert [{ url: "..." }] → ["..."]
+  const imageArray = Array.isArray(parsedImages)
+    ? parsedImages.map(img => (typeof img === "object" ? img.url : img))
+    : [parsedImages]
 
-    const prevImage = () => {
-      setCurrentImageIndex((prev) => ({
-        ...prev,
-        [product.id]: currentIndex === 0 ? imageArray.length - 1 : currentIndex - 1,
-      }))
-    }
+  const currentIndex = currentImageIndex[product.id] || 0
+  const currentImage = imageArray[currentIndex] || imageArray[0]
 
-    const goToImage = (index) => {
-      setCurrentImageIndex((prev) => ({
-        ...prev,
-        [product.id]: index,
-      }))
-    }
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => ({
+      ...prev,
+      [product.id]: (currentIndex + 1) % imageArray.length,
+    }))
+  }
 
-    return (
-      <div className="space-y-3">
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 aspect-square group shadow-sm">
-          <img
-            src={currentImage || "/placeholder.svg"}
-            alt={product.name}
-            className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
-            loading="lazy"
-          />
-          {imageArray.length > 1 && (
-            <>
-              <button
-                onClick={prevImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-slate-800 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                onClick={nextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-slate-800 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/20 backdrop-blur-sm rounded-full px-3 py-1.5">
-                {imageArray.slice(0, 8).map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => goToImage(index)}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      index === currentIndex
-                        ? "bg-white scale-125 shadow-sm"
-                        : "bg-white/60 hover:bg-white/80 hover:scale-110"
-                    }`}
-                  />
-                ))}
-                {imageArray.length > 8 && (
-                  <span className="text-white text-xs ml-2 font-medium">+{imageArray.length - 8}</span>
-                )}
-              </div>
-            </>
-          )}
-        </div>
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => ({
+      ...prev,
+      [product.id]: currentIndex === 0 ? imageArray.length - 1 : currentIndex - 1,
+    }))
+  }
+
+  const goToImage = (index) => {
+    setCurrentImageIndex((prev) => ({
+      ...prev,
+      [product.id]: index,
+    }))
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 aspect-square group shadow-sm">
+        <img
+          src={currentImage || "/placeholder.svg"}
+          alt={product.name}
+          className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+          loading="lazy"
+        />
         {imageArray.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {imageArray.slice(0, 6).map((img, index) => (
-              <button
-                key={index}
-                onClick={() => goToImage(index)}
-                className={`relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 w-16 h-16 flex-shrink-0 border-2 transition-all duration-300 shadow-sm hover:shadow-md ${
-                  index === currentIndex
-                    ? "border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800 scale-105"
-                    : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:scale-105"
-                }`}
-              >
-                <img
-                  src={img || "/placeholder.svg"}
-                  alt={`${product.name} ${index + 1}`}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
+          <>
+            <button
+              onClick={prevImage}
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-slate-800 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={nextImage}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-slate-800 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/20 backdrop-blur-sm rounded-full px-3 py-1.5">
+              {imageArray.slice(0, 8).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToImage(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentIndex
+                      ? "bg-white scale-125 shadow-sm"
+                      : "bg-white/60 hover:bg-white/80 hover:scale-110"
+                  }`}
                 />
-              </button>
-            ))}
-            {imageArray.length > 6 && (
-              <div className="w-16 h-16 flex-shrink-0 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-lg flex items-center justify-center text-xs text-slate-600 dark:text-slate-400 font-medium border-2 border-slate-200 dark:border-slate-700">
-                +{imageArray.length - 6}
-              </div>
-            )}
-          </div>
+              ))}
+              {imageArray.length > 8 && (
+                <span className="text-white text-xs ml-2 font-medium">
+                  +{imageArray.length - 8}
+                </span>
+              )}
+            </div>
+          </>
         )}
       </div>
-    )
-  }
+      {imageArray.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {imageArray.slice(0, 6).map((img, index) => (
+            <button
+              key={index}
+              onClick={() => goToImage(index)}
+              className={`relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 w-16 h-16 flex-shrink-0 border-2 transition-all duration-300 shadow-sm hover:shadow-md ${
+                index === currentIndex
+                  ? "border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800 scale-105"
+                  : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:scale-105"
+              }`}
+            >
+              <img
+                src={img || "/placeholder.svg"}
+                alt={`${product.name} ${index + 1}`}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </button>
+          ))}
+          {imageArray.length > 6 && (
+            <div className="w-16 h-16 flex-shrink-0 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-lg flex items-center justify-center text-xs text-slate-600 dark:text-slate-400 font-medium border-2 border-slate-200 dark:border-slate-700">
+              +{imageArray.length - 6}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 
   const renderPagination = () => {
     const totalPages = Math.ceil(totalProducts / productsPerPage)
@@ -853,7 +922,7 @@ export default function ScraperPage() {
                         </p>
                         {log.data.productData && (
                           <div className="mt-2 p-2 bg-white/50 dark:bg-slate-800/50 rounded text-xs">
-                            <span className="font-semibold">{log.data.productData.name}</span>
+                            <span className="font-semibold">{log.data.productData.product_name}</span>
                             {log.data.productData.price && (
                               <span className="ml-2 text-green-600">
                                 {log.data.productData.currency}{log.data.productData.price}
@@ -1069,14 +1138,23 @@ export default function ScraperPage() {
                                 </Badge>
                               )}
                               {product.scraped_category && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs border-green-300 dark:border-green-600 text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20"
-                                >
-                                  <Tag className="h-3 w-3 mr-1" />
-                                  {product.scraped_category}
-                                </Badge>
-                              )}
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Badge
+          variant="outline"
+          className="text-xs border-green-300 dark:border-green-600 text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 max-w-full truncate cursor-help"
+        >
+          <Tag className="h-3 w-3 mr-1 shrink-0" />
+          <span className="truncate">{product.scraped_category}</span>
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs">
+        <p className="text-sm">{product.scraped_category}</p>
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
                               {product.scrape_type && (
                                 <Badge
                                   variant="outline"
@@ -1101,9 +1179,11 @@ export default function ScraperPage() {
                               )}
                             </div>
 
-                            <h3 className="font-semibold text-base sm:text-lg leading-tight line-clamp-2 text-balance group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200 text-slate-900 dark:text-white">
-                              {product.name}
-                            </h3>
+                          <h3 className="font-semibold text-base sm:text-lg leading-tight text-balance group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200 text-slate-900 dark:text-white">
+  {product.product_name}
+</h3>
+
+                            
 
                             <div className="space-y-3 flex-1">
                               {product.description && (
@@ -1134,6 +1214,7 @@ export default function ScraperPage() {
                               )}
                             </div>
                           </div>
+{renderProductMaterials(product)}
 
                           {product.product_url && (
                             <Button

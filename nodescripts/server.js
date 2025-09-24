@@ -12,7 +12,7 @@ const wss = new WebSocketServer({ server });
 
 // Store active WebSocket connections
 const clients = new Map();
-//https://www.asos.com/women/tops/t-shirts-vests/cat/?cid=4718#ctaref-cat_header
+
 // ASOS Category Structure
 const ASOS_CATEGORIES = {
   women: {
@@ -222,7 +222,18 @@ app.use(cors({
   origin: "*",
 }));
 app.use(express.json());
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+// Initialize Supabase with service role key (bypass RLS)
+const supabase = createClient(
+  process.env.SUPABASE_URL, 
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
 
 // Sleep helper
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -335,7 +346,7 @@ async function loadAllProducts(page) {
   });
 }
 
-// Scrape one product page
+// Scrape one product page - FIXED VERSION
 async function scrapeProduct(browser, link, index, total, categoryInfo = null) {
   const page = await browser.newPage();
   
@@ -369,12 +380,20 @@ async function scrapeProduct(browser, link, index, total, categoryInfo = null) {
     const data = await page.evaluate(() => {
       const safeText = (sel) => document.querySelector(sel)?.innerText?.trim() || null;
 
+      // Product name - using the working logic from first code
       const name = safeText("h1[data-testid='product-title']") || document.title.split("|")[0].trim();
+      
+      // Price extraction - using the working logic from first code
       const price = safeText("[data-testid='current-price']");
       const currency = price?.match(/[£$€]/)?.[0] || null;
+      const priceValue = price ? parseFloat(price.replace(/[^\d.]/g, "")) : null;
+      
+      // Stock status - using the working logic
       const stock_status = safeText("[data-testid='stock-availability']") || "Available";
+      const availability = !stock_status.toLowerCase().includes('out of stock') && 
+                          !stock_status.toLowerCase().includes('unavailable');
 
-      // colors
+      // Colors extraction - using the working logic that gets ALL colors
       let colors = [];
       const selectedColor = document.querySelector("span[data-testid='product-colour']")?.innerText.trim();
       if (selectedColor) colors.push(selectedColor);
@@ -383,6 +402,7 @@ async function scrapeProduct(browser, link, index, total, categoryInfo = null) {
         if (label && !colors.includes(label)) colors.push(label);
       });
 
+      // Description - using the working logic
       let description = null;
       const descBlock = document.querySelector("#productDescriptionDetails .F_yfF");
       if (descBlock) description = descBlock.innerText.replace(/\s+/g, " ").trim();
@@ -391,6 +411,7 @@ async function scrapeProduct(browser, link, index, total, categoryInfo = null) {
         if (metaDesc) description = metaDesc.trim();
       }
 
+      // Brand extraction - using the working logic with fallback
       let brand = null;
       const brandBlock = document.querySelector("#productDescriptionBrand .F_yfF");
       if (brandBlock) {
@@ -405,38 +426,105 @@ async function scrapeProduct(browser, link, index, total, categoryInfo = null) {
         }
       }
 
+      // Category extraction
       let category = "";
       const catLink = document.querySelector("#productDescriptionDetails a[href*='/cat/']");
       if (catLink) category = catLink.innerText.trim();
 
-      const materials = document.querySelector("#productDescriptionAboutMe .F_yfF")?.innerText.trim() || null;
-      const care_info = document.querySelector("#productDescriptionCareInfo .F_yfF")?.innerText.trim() || null;
+      // Materials and care - using the working logic with multiple selectors
+      const materialsText = document.querySelector("#productDescriptionAboutMe .F_yfF")?.innerText.trim() || null;
+      
+      // Try multiple selectors for care info (Look After Me section)
+   let care_info = null;
+      const careSelectors = [
+        "#productDescriptionCareInfo .F_yfF", // Direct content selector
+        "[data-testid='productDescriptionCareInfo'] .F_yfF", // Using data-testid
+        ".accordion-item-module_contentWrapper__qd4TE .F_yfF", // Broad class-based selector for accordion content
+        "[aria-controls='productDescriptionCareInfo'] ~ div .F_yfF", // Sibling selector with tilde for flexibility
+        "[aria-label='Look After Me'] ~ div .F_yfF" // Sibling selector based on aria-label
+      ];
 
+      for (const selector of careSelectors) {
+        const element = document.querySelector(selector);
+        if (element && element.innerText.trim()) {
+          care_info = element.innerText.trim().replace(/\s+/g, " ");
+          break;
+        }
+      }
+
+      // Fallback: Check for accordion content after ensuring expansion
+      if (!care_info) {
+        const careButton = document.querySelector(
+          "button[aria-controls='productDescriptionCareInfo'], button[aria-label='Look After Me']"
+        );
+        if (careButton) {
+          // Ensure accordion is expanded
+          const expanded = careButton.getAttribute("aria-expanded");
+          if (expanded === "false") {
+            careButton.click(); // Attempt to expand if not already
+          }
+          // Look for content in the accordion wrapper
+          const careContent = document.querySelector(
+            "#productDescriptionCareInfo .F_yfF, [data-testid='productDescriptionCareInfo'] .F_yfF"
+          );
+          if (careContent && careContent.innerText.trim()) {
+            care_info = careContent.innerText.trim().replace(/\s+/g, " ");
+          }
+        }
+      }
+
+      // Sizes - using the working logic that gets all sizes
       let size = [];
       document.querySelectorAll("#variantSelector option").forEach((opt) => {
         if (opt.value) size.push(opt.innerText.trim());
       });
       if (size.length === 0) size = null;
 
+      // Images - using the working logic with proper formatting
       const images = Array.from(document.querySelectorAll("#core-product img"))
         .map((img) => img.src.replace(/\?[^ ]*$/, ""))
         .map((src) => `${src}?$n_960w$&wid=960&fit=constrain`)
         .filter((src) => src.includes("asos-media"));
+
+      // Generate product_id from URL
+      const urlParts = window.location.pathname.split('/');
+      let product_id = null;
+      for (let part of urlParts) {
+        if (part.includes('prd')) {
+          const idMatch = part.match(/(\d+)/);
+          if (idMatch) {
+            product_id = parseInt(idMatch[1]);
+            break;
+          }
+        }
+      }
 
       return {
         name,
         description,
         brand,
         category,
-        price: price ? parseFloat(price.replace(/[^\d.]/g, "")) : null,
+        price: priceValue,
         currency,
         stock_status,
-        materials,
+        availability,
+        materials: materialsText,
         care_info,
         size: size ? size.join(", ") : null,
-        color: colors.join(", "),
+        color: colors.join(", "), // Join all colors
         images,
         product_url: window.location.href,
+        product_id: product_id || Math.floor(Math.random() * 1000000000),
+        colour_code: Math.floor(Math.random() * 1000),
+        section: null,
+        product_family: category?.toUpperCase() || "CLOTHING",
+        product_family_en: category || "Clothing",
+        product_subfamily: null,
+        dimension: null,
+        low_on_stock: !availability,
+        sku: null,
+        you_may_also_like: null,
+        category_id: 0
       };
     });
 
@@ -444,29 +532,80 @@ async function scrapeProduct(browser, link, index, total, categoryInfo = null) {
     if (categoryInfo) {
       data.scraped_category = categoryInfo.breadcrumb;
       data.category_path = categoryInfo.path;
-      data.scrape_type = 'category';
+      data.scrape_type = 'ASOS Category';
     } else {
-      data.scrape_type = 'search';
+      data.scrape_type = 'ASOS Search';
     }
 
-    // Insert into Supabase
-    const { error } = await supabase.from("products").insert(data);
-    if (error) {
+    // Insert using RPC function with correct field mapping matching SQL function signature
+    try {
+      const { data: insertResult, error } = await supabase.rpc("upsert_zara_product_v6", {
+        p_id: null, // generate new UUID
+        p_product_name: data.name,
+        p_price: data.price,
+        p_colour: data.color, // British spelling for main colour field
+        p_description: data.description,
+        p_size: data.size ? data.size.split(", ") : ['One Size'], // Convert back to array
+        p_materials: data.materials ? [JSON.stringify({ description: data.materials })] : null, // JSONB array format
+        p_availability: data.availability,
+        p_category_id: data.category_id,
+        p_product_id: data.product_id,
+        p_colour_code: data.colour_code,
+        p_section: data.section,
+        p_product_family: data.product_family,
+        p_product_family_en: data.product_family_en,
+        p_product_subfamily: data.product_subfamily,
+        p_care: data.care_info ? JSON.stringify({ info: data.care_info }) : null, // JSONB format
+        p_materials_description: data.materials,
+        p_dimension: data.dimension,
+        p_low_on_stock: data.low_on_stock,
+        p_sku: data.sku,
+        p_url: data.product_url, // Note: this is p_url not p_product_url
+        p_currency: data.currency,
+        p_image: data.images && data.images.length > 0 ? JSON.stringify(data.images.map(url => ({ url }))) : null, // Note: p_image not p_images
+        p_you_may_also_like: data.you_may_also_like,
+        p_category_path: data.category_path || null,
+        p_scraped_category: data.scraped_category || null,
+        p_scrape_type: data.scrape_type || "ASOS",
+        p_brand: data.brand,
+        p_category: data.category,
+        p_stock_status: data.stock_status,
+        p_color: data.color, // American spelling for secondary color field
+        p_images: data.images && data.images.length > 0 ? JSON.stringify(data.images.map(url => ({ url }))) : null, // Secondary images field
+        p_product_url: data.product_url, // Secondary URL field
+        p_care_info: data.care_info
+      });
+      
+      if (error) {
+        console.error('RPC upsert error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        
+        broadcastProgress({
+          type: 'error',
+          message: `Failed to save "${data.name}" to database: ${error.message}${error.hint ? ` (Hint: ${error.hint})` : ''}`
+        });
+      } else {
+        broadcastProgress({
+          type: 'success',
+          message: `Successfully saved "${data.name}" to database via RPC${categoryInfo ? ` (Category: ${categoryInfo.breadcrumb})` : ''}`,
+          productData: {
+            name: data.name,
+            price: data.price,
+            currency: data.currency,
+            brand: data.brand,
+            category: categoryInfo?.breadcrumb
+          }
+        });
+      }
+    } catch (insertError) {
+      console.error('RPC operation failed:', insertError);
       broadcastProgress({
         type: 'error',
-        message: `Failed to save "${data.name}" to database: ${error.message}`
-      });
-    } else {
-      broadcastProgress({
-        type: 'success',
-        message: `Successfully saved "${data.name}" to database${categoryInfo ? ` (Category: ${categoryInfo.breadcrumb})` : ''}`,
-        productData: {
-          name: data.name,
-          price: data.price,
-          currency: data.currency,
-          brand: data.brand,
-          category: categoryInfo?.breadcrumb
-        }
+        message: `Database RPC failed for "${data.name}": ${insertError.message}`
       });
     }
 
@@ -482,7 +621,7 @@ async function scrapeProduct(browser, link, index, total, categoryInfo = null) {
   }
 }
 
-// Main scraper function (updated to handle both search and category)
+// Main scraper function
 async function scrapeASOS(searchTerm = null, categoryPath = null, options = { mode: "limit", limit: 5 }, concurrency = 5) {
   const isSearchMode = !!searchTerm;
   const isCategoryMode = !!categoryPath;
@@ -504,8 +643,9 @@ async function scrapeASOS(searchTerm = null, categoryPath = null, options = { mo
       message: `Starting category scraper for "${breadcrumb}" in ${options.mode} mode...`
     });
   }
+
   const browser = await puppeteer.launch({
-    headless: 'new',
+    headless: false,
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -693,7 +833,7 @@ async function scrapeASOS(searchTerm = null, categoryPath = null, options = { mo
     let productLinks = [];
     for (const linkSel of linkSelectors) {
       try {
-        productLinks = await page.$$eval(linkSel, (links) =>
+        productLinks = await page.$eval(linkSel, (links) =>
           links.map((a) => a.href).filter(href => href && href.includes('/prd/'))
         );
         if (productLinks.length > 0) {
@@ -707,6 +847,62 @@ async function scrapeASOS(searchTerm = null, categoryPath = null, options = { mo
         broadcastProgress({
           type: 'warning',
           message: `Failed to get links with selector: ${linkSel}`
+        });
+      }
+    }
+
+    if (productLinks.length === 0) {
+      // Debug: Let's see what's actually on the page
+      broadcastProgress({
+        type: 'info',
+        message: 'No product links found. Debugging page structure...'
+      });
+      
+      try {
+        // Get page info for debugging
+        const pageInfo = await page.evaluate(() => {
+          const info = {
+            title: document.title,
+            url: window.location.href,
+            productTileCount: document.querySelectorAll('li.productTile_U0clN').length,
+            allLinksCount: document.querySelectorAll('a').length,
+            linksWithPrd: Array.from(document.querySelectorAll('a')).filter(a => a.href && a.href.includes('/prd/')).length,
+            sampleLinks: Array.from(document.querySelectorAll('a')).slice(0, 10).map(a => a.href).filter(href => href),
+            productTileHTML: document.querySelector('li.productTile_U0clN')?.outerHTML?.substring(0, 500) || 'No product tile found'
+          };
+          return info;
+        });
+        
+        broadcastProgress({
+          type: 'info',
+          message: `Page debug info: Title="${pageInfo.title}", ProductTiles=${pageInfo.productTileCount}, TotalLinks=${pageInfo.allLinksCount}, PrdLinks=${pageInfo.linksWithPrd}`,
+          debugInfo: pageInfo
+        });
+        
+        // Try one more time with a very broad search
+        const allPrdLinks = await page.evaluate(() => {
+          const links = [];
+          const allAs = document.querySelectorAll('a');
+          allAs.forEach(a => {
+            if (a.href && (a.href.includes('/prd/') || a.href.match(/\/[\w-]+\/[\w-]+\/prd\/\d+/))) {
+              links.push(a.href);
+            }
+          });
+          return [...new Set(links)];
+        });
+        
+        if (allPrdLinks.length > 0) {
+          productLinks = allPrdLinks;
+          broadcastProgress({
+            type: 'success',
+            message: `Found ${productLinks.length} product links through broad search`
+          });
+        }
+        
+      } catch (debugError) {
+        broadcastProgress({
+          type: 'warning',
+          message: `Debug failed: ${debugError.message}`
         });
       }
     }
@@ -929,8 +1125,182 @@ app.post("/scrape-category", async (req, res) => {
   }
 });
 
+// Test endpoint for RPC function using exact client example
+app.post('/test-rpc-client-example', async (req, res) => {
+  try {
+    broadcastProgress({
+      type: 'info',
+      message: 'Testing RPC with exact client example...'
+    });
+
+    // Use the exact example from the client
+    const { data, error } = await supabase.rpc('upsert_zara_product_v2', {
+      "_id": null, // Let it generate UUID
+      "_product_name": "Classic White T-Shirt",
+      "_price": 19.99,
+      "_color": "White",
+      "_category": "Tops",
+      "_brand": "Zara",
+      "_currency": "USD",
+      "_description": "Soft cotton T-shirt with a round neck.",
+      "_images": [
+        "https://example.com/images/tshirt1.jpg",
+        "https://example.com/images/tshirt1-back.jpg"
+      ],
+      "_materials": [
+        { "material": "Cotton", "percentage": 100 }
+      ],
+      "_product_url": "https://www.zara.com/product/12345",
+      "_category_path": "Women > Tops > T-Shirts",
+      "_scrape_type": "zara_scraper_v2",
+      "_scraped_category": "Women/Tops",
+      "_size": ["S", "M", "L"],
+      "_stock_status": "in_stock"
+    });
+
+    if (error) {
+      broadcastProgress({
+        type: 'error',
+        message: `Client example RPC test failed: ${error.message}`
+      });
+      res.status(500).json({ success: false, error: error.message, details: error });
+    } else {
+      broadcastProgress({
+        type: 'success',
+        message: 'Client example RPC test completed successfully!'
+      });
+      res.json({ success: true, data: data, message: 'Client example RPC test completed successfully' });
+    }
+  } catch (err) {
+    broadcastProgress({
+      type: 'error',
+      message: `Client example RPC test error: ${err.message}`
+    });
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Test endpoint for v6 RPC function
+app.post('/test-rpc-v6', async (req, res) => {
+  try {
+    broadcastProgress({
+      type: 'info',
+      message: 'Testing RPC v6 function manually...'
+    });
+
+    const { data, error } = await supabase.rpc('upsert_zara_product_v6', {
+      p_id: null,
+      p_product_name: 'Manual Test Product V6',
+      p_price: 99.99,
+      p_colour: 'Red',
+      p_description: 'This is a manual test of the v6 RPC function',
+      p_size: ['S', 'M', 'L'],
+      p_materials: [JSON.stringify({"material": "Cotton", "percentage": 80}), JSON.stringify({"material": "Polyester", "percentage": 20})],
+      p_availability: true,
+      p_currency: 'GBP',
+      p_url: 'https://example.com/manual-test-v6', // Note: p_url not p_product_url for main URL
+      p_brand: 'Manual Test Brand',
+      p_category: 'Test Category',
+      p_stock_status: 'in_stock',
+      p_category_path: 'test > manual > rpc > v6',
+      p_scraped_category: 'Manual Test V6',
+      p_scrape_type: 'manual',
+      p_image: JSON.stringify([{ url: 'https://example.com/test1.jpg' }, { url: 'https://example.com/test2.jpg' }]), // Note: p_image not p_images for main field
+      p_product_id: Math.floor(Math.random() * 1000000000),
+      p_colour_code: 999,
+      p_section: null,
+      p_product_family: 'TEST',
+      p_product_family_en: 'Test',
+      p_product_subfamily: null,
+      p_care: JSON.stringify({ info: 'Machine wash cold' }), // JSONB format
+      p_materials_description: 'Cotton blend fabric',
+      p_dimension: null,
+      p_low_on_stock: false,
+      p_sku: null,
+      p_you_may_also_like: null,
+      p_category_id: 0,
+      p_color: 'Red', // Secondary color field (American spelling)
+      p_images: JSON.stringify([{ url: 'https://example.com/test1.jpg' }, { url: 'https://example.com/test2.jpg' }]), // Secondary images field
+      p_product_url: 'https://example.com/manual-test-v6', // Secondary URL field
+      p_care_info: 'Machine wash cold'
+    });
+
+    if (error) {
+      broadcastProgress({
+        type: 'error',
+        message: `Manual RPC v6 test failed: ${error.message}`
+      });
+      res.status(500).json({ success: false, error: error.message, details: error });
+    } else {
+      broadcastProgress({
+        type: 'success',
+        message: 'Manual RPC v6 test completed successfully!'
+      });
+      res.json({ success: true, data: data, message: 'RPC v6 test completed successfully' });
+    }
+  } catch (err) {
+    broadcastProgress({
+      type: 'error',
+      message: `Manual RPC v6 test error: ${err.message}`
+    });
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.get('/health', (req, res) => {
   res.json({ message: "everything is working" });
+});
+
+// Test endpoint for RPC function
+app.post('/test-rpc', async (req, res) => {
+  try {
+    broadcastProgress({
+      type: 'info',
+      message: 'Manual RPC test initiated...'
+    });
+
+    const { data, error } = await supabase.rpc('upsert_zara_product', {
+      _id: null,
+      product_name: 'Manual Test Product',
+      _price: 99.99,
+      _color: 'Red',
+      _description: 'This is a manual test of the RPC function',
+      _size: ['S', 'M', 'L'],
+      _materials: ['Cotton', 'Polyester'],
+      _currency: 'GBP',
+      _images: [
+        { url: 'https://example.com/test1.jpg' },
+        { url: 'https://example.com/test2.jpg' }
+      ],
+      product_url: 'https://example.com/manual-test',
+      _brand: 'Manual Test Brand',
+      _category: 'Test Category',
+      stock_status: 'Available',
+      category_path: 'test > manual > rpc',
+      scraped_category: 'Manual Test',
+      scrape_type: 'manual'
+    });
+
+    if (error) {
+      broadcastProgress({
+        type: 'error',
+        message: `Manual RPC test failed: ${error.message}`
+      });
+      res.status(500).json({ success: false, error: error.message });
+    } else {
+      broadcastProgress({
+        type: 'success',
+        message: 'Manual RPC test completed successfully!'
+      });
+      res.json({ success: true, data: data, message: 'RPC test completed successfully' });
+    }
+  } catch (err) {
+    broadcastProgress({
+      type: 'error',
+      message: `Manual RPC test error: ${err.message}`
+    });
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 const PORT = 4000;
