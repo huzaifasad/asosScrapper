@@ -1,13 +1,13 @@
 version: "3.8"
 services:
   server:
-    build: ./server
+    build: ./nodescripts
     container_name: puppeteer-server
     ports:
       - "4000:4000"
 
   frontend:
-    build: ./frontend
+    build: ./productsmvp
     container_name: nextjs-frontend
     ports:
       - "3000:3000"
