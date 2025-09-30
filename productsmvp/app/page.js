@@ -810,7 +810,7 @@ const renderProductImages = (product) => {
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 dark:from-white dark:via-blue-200 dark:to-white bg-clip-text text-transparent tracking-tight text-balance">
             Product Scraper
           </h1>
-          <a href="/Frenchconnection">French connection</a>
+         <a href="/Frenchconnection" className="b-2 px-4 py-4 bg-black text-white mt-20 hover:bg-white hover:text-black">French connection</a>
           <p className="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed text-pretty">
             Search products or browse by category with real-time progress tracking
           </p>
