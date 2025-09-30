@@ -377,6 +377,9 @@ async function scrapeProduct(browser, link, index, total, categoryInfo = null) {
     await randomDelay(2000, 4000);
     await expandAccordions(page);
 
+
+
+    
     const data = await page.evaluate(() => {
       const safeText = (sel) => document.querySelector(sel)?.innerText?.trim() || null;
 

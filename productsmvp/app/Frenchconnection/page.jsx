@@ -1,7 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Package, Loader2, Download, Filter, Grid, List, SlidersHorizontal, Tag, User, Box, DollarSign, TrendingUp, AlertCircle, CheckCircle, XCircle, Info } from 'lucide-react';
+import { Search, Package, Loader2, Download, Filter, Grid, SlidersHorizontal, Tag, User, Box, DollarSign, CheckCircle, XCircle, Info, AlertCircle, Database, Check, Image as ImageIcon, Maximize2 } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase Client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+);
 
 export default function ComprehensiveShopifyScraper() {
   const BASE_URL = 'https://www.frenchconnection.com';
@@ -15,8 +22,15 @@ export default function ComprehensiveShopifyScraper() {
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [productsPerPage] = useState(24);
-  const [viewMode, setViewMode] = useState('grid');
   const [scrapingAll, setScrapingAll] = useState(false);
+  
+  // Selection & Database States
+  const [selectedProducts, setSelectedProducts] = useState(new Set());
+  const [uploadingToDb, setUploadingToDb] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+  const [uploadResults, setUploadResults] = useState({ success: 0, failed: 0, skipped: 0 });
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedProductImages, setSelectedProductImages] = useState(null);
   
   // Filter States
   const [filters, setFilters] = useState({
@@ -46,7 +60,6 @@ export default function ComprehensiveShopifyScraper() {
     fetchCollections();
   }, []);
 
-  // Fetch Collections
   const fetchCollections = async () => {
     try {
       setLoading(true);
@@ -64,18 +77,15 @@ export default function ComprehensiveShopifyScraper() {
     }
   };
 
-  // Fetch Products from Selected Collection
   const fetchCollectionProducts = async (handle, pageNum = 1) => {
     if (!handle) return [];
     
     try {
-      const limit = 250; // Max per request
+      const limit = 250;
       const url = `${BASE_URL}/collections/${handle}/products.json?limit=${limit}&page=${pageNum}`;
       const response = await fetch(url);
       
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       
       const data = await response.json();
       return data.products || [];
@@ -85,7 +95,6 @@ export default function ComprehensiveShopifyScraper() {
     }
   };
 
-  // Scrape ALL Products from a Collection (Multi-page)
   const scrapeAllCollectionProducts = async (handle) => {
     setScrapingAll(true);
     setError('');
@@ -102,13 +111,11 @@ export default function ComprehensiveShopifyScraper() {
         } else {
           allProds = [...allProds, ...prods];
           
-          // If less than 250, we've hit the last page
           if (prods.length < 250) {
             hasMore = false;
           }
           
           page++;
-          // Small delay to avoid rate limits
           await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
@@ -122,19 +129,18 @@ export default function ComprehensiveShopifyScraper() {
     }
   };
 
-  // Handle Collection Selection
   const handleCollectionSelect = async (handle) => {
     setSelectedCollection(handle);
     setCurrentPage(1);
     setLoading(true);
     setError('');
+    setSelectedProducts(new Set());
     
     try {
       const prods = await scrapeAllCollectionProducts(handle);
       setAllProducts(prods);
       setProducts(prods);
       
-      // Extract unique vendors, types, tags
       extractMetadata(prods);
       calculateStats(prods);
       
@@ -145,7 +151,6 @@ export default function ComprehensiveShopifyScraper() {
     }
   };
 
-  // Extract Metadata (Vendors, Types, Tags)
   const extractMetadata = (prods) => {
     const vendorSet = new Set();
     const typeSet = new Set();
@@ -168,7 +173,6 @@ export default function ComprehensiveShopifyScraper() {
     setTags(Array.from(tagSet).sort());
   };
 
-  // Calculate Statistics
   const calculateStats = (prods) => {
     let totalPrice = 0;
     let inStock = 0;
@@ -197,11 +201,9 @@ export default function ComprehensiveShopifyScraper() {
     });
   };
 
-  // Apply Filters
   const filteredProducts = useMemo(() => {
     let filtered = [...allProducts];
     
-    // Search Query
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase();
       filtered = filtered.filter(p => 
@@ -211,17 +213,14 @@ export default function ComprehensiveShopifyScraper() {
       );
     }
     
-    // Vendor Filter
     if (filters.vendor) {
       filtered = filtered.filter(p => p.vendor === filters.vendor);
     }
     
-    // Product Type Filter
     if (filters.productType) {
       filtered = filtered.filter(p => p.product_type === filters.productType);
     }
     
-    // Tag Filter
     if (filters.tag) {
       filtered = filtered.filter(p => {
         if (Array.isArray(p.tags)) {
@@ -233,7 +232,6 @@ export default function ComprehensiveShopifyScraper() {
       });
     }
     
-    // Price Range Filter
     if (filters.priceMin || filters.priceMax) {
       filtered = filtered.filter(p => {
         if (!p.variants || p.variants.length === 0) return false;
@@ -244,7 +242,6 @@ export default function ComprehensiveShopifyScraper() {
       });
     }
     
-    // Availability Filter
     if (filters.availability !== 'all') {
       filtered = filtered.filter(p => {
         if (!p.variants || p.variants.length === 0) return false;
@@ -256,7 +253,6 @@ export default function ComprehensiveShopifyScraper() {
     return filtered;
   }, [allProducts, filters]);
 
-  // Pagination
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * productsPerPage;
     const endIndex = startIndex + productsPerPage;
@@ -265,7 +261,6 @@ export default function ComprehensiveShopifyScraper() {
 
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
-  // Reset Filters
   const resetFilters = () => {
     setFilters({
       vendor: '',
@@ -277,6 +272,163 @@ export default function ComprehensiveShopifyScraper() {
       searchQuery: ''
     });
     setCurrentPage(1);
+  };
+
+  // Selection Handlers
+  const toggleProductSelection = (productId) => {
+    const newSelected = new Set(selectedProducts);
+    if (newSelected.has(productId)) {
+      newSelected.delete(productId);
+    } else {
+      newSelected.add(productId);
+    }
+    setSelectedProducts(newSelected);
+  };
+
+  const selectAllOnPage = () => {
+    const newSelected = new Set(selectedProducts);
+    paginatedProducts.forEach(p => newSelected.add(p.id));
+    setSelectedProducts(newSelected);
+  };
+
+  const selectAllFiltered = () => {
+    const newSelected = new Set();
+    filteredProducts.forEach(p => newSelected.add(p.id));
+    setSelectedProducts(newSelected);
+  };
+
+  const deselectAll = () => {
+    setSelectedProducts(new Set());
+  };
+
+  // Transform Shopify Product to Database Format
+  const transformProductForDB = (product) => {
+    const variant = product.variants?.[0] || {};
+    const allVariants = product.variants || [];
+    
+    // Get all sizes from variants
+    const sizes = allVariants.map(v => v.title || v.option1).filter(Boolean);
+    
+    // Get all images
+    const images = product.images?.map(img => img.src) || [];
+    
+    // Parse tags
+    let tagsArray = [];
+    if (Array.isArray(product.tags)) {
+      tagsArray = product.tags;
+    } else if (typeof product.tags === 'string') {
+      tagsArray = product.tags.split(',').map(t => t.trim());
+    }
+    
+    // Build product URL
+    const productUrl = `${BASE_URL}/products/${product.handle}`;
+    
+    // Strip HTML tags from description
+    const stripHtml = (html) => {
+      if (!html) return '';
+      return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+    };
+    
+    // Helper to safely stringify JSONB arrays
+    const toJsonbArray = (arr) => {
+      if (!arr || arr.length === 0) return null;
+      return arr.map(item => JSON.stringify(item));
+    };
+    
+    return {
+      p_id: null,
+      p_product_name: product.title || 'Untitled Product',
+      p_price: variant.price ? parseFloat(variant.price) : 0,
+      p_colour: tagsArray.find(t => t.toLowerCase().includes('color') || t.toLowerCase().includes('colour')) || null,
+      p_description: stripHtml(product.body_html) || null,
+      p_size: sizes.length > 0 ? sizes : ['One Size'],
+      p_materials: product.body_html ? toJsonbArray([{ description: stripHtml(product.body_html) }]) : null,
+      p_availability: variant.available || false,
+      p_category_id: null,
+      p_product_id: product.id ? parseInt(product.id) : Math.floor(Math.random() * 1000000000), // MUST BE NUMBER
+      p_colour_code: null, // NULL instead of empty string
+      p_section: selectedCollection || null,
+      p_product_family: product.product_type || null,
+      p_product_family_en: product.product_type || null,
+      p_product_subfamily: null,
+      p_care: null,
+      p_materials_description: stripHtml(product.body_html) || null,
+      p_dimension: variant.weight ? `${variant.weight} ${variant.weight_unit}` : null,
+      p_low_on_stock: (variant.inventory_quantity !== undefined && variant.inventory_quantity < 5) || false,
+      p_sku: variant.sku || null,
+      p_url: productUrl,
+      p_currency: 'USD',
+      p_image: images.length > 0 ? JSON.stringify(images.map(url => ({ url }))) : null,
+      p_you_may_also_like: null,
+      p_category_path: selectedCollection || null,
+      p_scraped_category: product.product_type || null,
+      p_scrape_type: 'French Connection',
+      p_brand: product.vendor || 'French Connection',
+      p_category: product.product_type || null,
+      p_stock_status: variant.available ? 'in_stock' : 'out_of_stock',
+      p_color: tagsArray.find(t => t.toLowerCase().includes('color') || t.toLowerCase().includes('colour')) || null,
+      p_images: images.length > 0 ? JSON.stringify(images.map(url => ({ url }))) : null,
+      p_product_url: productUrl,
+      p_care_info: null
+    };
+  };
+
+  // Upload Selected Products to Supabase
+  const uploadSelectedToDatabase = async () => {
+    if (selectedProducts.size === 0) {
+      alert('Please select products to upload');
+      return;
+    }
+
+    const selectedProds = allProducts.filter(p => selectedProducts.has(p.id));
+    
+    setUploadingToDb(true);
+    setUploadProgress({ current: 0, total: selectedProds.length });
+    setUploadResults({ success: 0, failed: 0, skipped: 0 });
+
+    let successCount = 0;
+    let failedCount = 0;
+    let skippedCount = 0;
+
+    for (let i = 0; i < selectedProds.length; i++) {
+      const product = selectedProds[i];
+      setUploadProgress({ current: i + 1, total: selectedProds.length });
+
+      try {
+        // Transform product data
+        const dbProduct = transformProductForDB(product);
+        
+        // Call the RPC function directly - it handles upsert logic internally
+        const { data: insertResult, error: insertError } = await supabase
+          .rpc('upsert_zara_product_v6', dbProduct);
+
+        if (insertError) {
+          // Check if it's a duplicate key error (product already exists)
+          if (insertError.code === '23505' || insertError.message?.includes('duplicate')) {
+            console.log(`Product ${product.title} already exists, skipping...`);
+            skippedCount++;
+          } else {
+            console.error(`Failed to upload ${product.title}:`, insertError);
+            failedCount++;
+          }
+        } else {
+          console.log(`Successfully uploaded ${product.title}`);
+          successCount++;
+        }
+
+      } catch (err) {
+        console.error(`Error processing ${product.title}:`, err);
+        failedCount++;
+      }
+
+      setUploadResults({ success: successCount, failed: failedCount, skipped: skippedCount });
+      
+      // Small delay to avoid rate limits
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    setUploadingToDb(false);
+    alert(`Upload Complete!\n✓ Success: ${successCount}\n⊘ Skipped: ${skippedCount}\n✗ Failed: ${failedCount}`);
   };
 
   // Export Functions
@@ -292,14 +444,15 @@ export default function ComprehensiveShopifyScraper() {
   };
 
   const exportToCSV = () => {
-    let csv = 'ID,Title,Handle,Vendor,Type,Price,Compare Price,Available,SKU,Tags,Images\n';
+    let csv = 'ID,Title,Handle,Vendor,Type,Price,Compare Price,Available,SKU,Tags,Images,Variants,Weight,Inventory\n';
     
     filteredProducts.forEach(p => {
       const variant = p.variants?.[0] || {};
       const tags = Array.isArray(p.tags) ? p.tags.join(';') : (p.tags || '');
       const images = p.images?.map(img => img.src).join(';') || '';
+      const variantCount = p.variants?.length || 0;
       
-      csv += `${p.id},"${(p.title || '').replace(/"/g, '""')}",${p.handle || ''},${p.vendor || ''},${p.product_type || ''},${variant.price || ''},${variant.compare_at_price || ''},${variant.available || false},${variant.sku || ''},"${tags}","${images}"\n`;
+      csv += `${p.id},"${(p.title || '').replace(/"/g, '""')}",${p.handle || ''},${p.vendor || ''},${p.product_type || ''},${variant.price || ''},${variant.compare_at_price || ''},${variant.available || false},${variant.sku || ''},"${tags}","${images}",${variantCount},${variant.weight || ''},${variant.inventory_quantity || 0}\n`;
     });
     
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -311,6 +464,12 @@ export default function ComprehensiveShopifyScraper() {
     URL.revokeObjectURL(url);
   };
 
+  // Show Image Gallery Modal
+  const showImageGallery = (product) => {
+    setSelectedProductImages(product);
+    setShowImageModal(true);
+  };
+
   // Product Card Component
   const ProductCard = ({ product }) => {
     if (!product) return null;
@@ -319,9 +478,10 @@ export default function ComprehensiveShopifyScraper() {
     const image = product.images?.[0];
     const hasDiscount = variant.compare_at_price && parseFloat(variant.compare_at_price) > parseFloat(variant.price);
     const discount = hasDiscount ? (((parseFloat(variant.compare_at_price) - parseFloat(variant.price)) / parseFloat(variant.compare_at_price)) * 100).toFixed(0) : 0;
+    const isSelected = selectedProducts.has(product.id);
     
     return (
-      <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100">
+      <div className={`bg-white rounded-xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 ${isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-100'}`}>
         <div className="relative h-64 bg-gray-100">
           {image ? (
             <img src={image.src} alt={product.title} className="w-full h-full object-cover" loading="lazy" />
@@ -329,23 +489,40 @@ export default function ComprehensiveShopifyScraper() {
             <div className="w-full h-full flex items-center justify-center"><Package className="w-16 h-16 text-gray-300" /></div>
           )}
           
+          {/* Selection Checkbox */}
+          <div className="absolute top-3 left-3">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleProductSelection(product.id);
+              }}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isSelected ? 'bg-blue-600 text-white' : 'bg-white text-gray-600'} shadow-lg hover:scale-110`}
+            >
+              {isSelected && <Check className="w-5 h-5" />}
+            </button>
+          </div>
+          
           {hasDiscount && (
-            <div className="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+            <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
               -{discount}%
             </div>
           )}
           
-          <div className="absolute top-3 right-3">
-            {variant.available ? (
-              <div className="bg-green-500 text-white p-2 rounded-full"><CheckCircle className="w-4 h-4" /></div>
-            ) : (
-              <div className="bg-gray-500 text-white p-2 rounded-full"><XCircle className="w-4 h-4" /></div>
-            )}
-          </div>
+          {product.images && product.images.length > 1 && (
+            <button
+              onClick={() => showImageGallery(product)}
+              className="absolute bottom-3 right-3 bg-black bg-opacity-70 text-white p-2 rounded-full hover:bg-opacity-90 transition-all"
+            >
+              <ImageIcon className="w-4 h-4" />
+              <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                {product.images.length}
+              </span>
+            </button>
+          )}
         </div>
         
         <div className="p-4">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             {product.vendor && (
               <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full flex items-center gap-1">
                 <User className="w-3 h-3" /> {product.vendor}
@@ -356,6 +533,9 @@ export default function ComprehensiveShopifyScraper() {
                 <Box className="w-3 h-3" /> {product.product_type}
               </span>
             )}
+            <div className={`ml-auto text-xs px-2 py-1 rounded-full font-medium ${variant.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              {variant.available ? '✓ In Stock' : '✗ Out of Stock'}
+            </div>
           </div>
           
           <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2 h-12">{product.title}</h3>
@@ -367,19 +547,38 @@ export default function ComprehensiveShopifyScraper() {
             )}
           </div>
           
+          {/* Product Details */}
+          <div className="space-y-2 mb-3">
+            {variant.sku && (
+              <div className="text-xs text-gray-600">
+                <span className="font-medium">SKU:</span> {variant.sku}
+              </div>
+            )}
+            {variant.weight && (
+              <div className="text-xs text-gray-600">
+                <span className="font-medium">Weight:</span> {variant.weight} {variant.weight_unit}
+              </div>
+            )}
+            {variant.inventory_quantity !== undefined && (
+              <div className="text-xs text-gray-600">
+                <span className="font-medium">Stock:</span> {variant.inventory_quantity} units
+              </div>
+            )}
+          </div>
+          
           {product.tags && product.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-3">
               {(Array.isArray(product.tags) ? product.tags : product.tags.split(',')).slice(0, 3).map((tag, i) => (
                 <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded flex items-center gap-1">
-                  <Tag className="w-3 h-3" /> {tag.trim()}
+                  <Tag className="w-3 h-3" /> {typeof tag === 'string' ? tag.trim() : tag}
                 </span>
               ))}
             </div>
           )}
           
           <div className="pt-3 border-t border-gray-100 flex justify-between items-center text-xs text-gray-600">
-            <span>{product.variants?.length || 0} variants</span>
-            {variant.sku && <span>SKU: {variant.sku}</span>}
+            <span>{product.variants?.length || 0} variant{(product.variants?.length || 0) !== 1 ? 's' : ''}</span>
+            <span>{product.images?.length || 0} image{(product.images?.length || 0) !== 1 ? 's' : ''}</span>
           </div>
         </div>
       </div>
@@ -398,9 +597,9 @@ export default function ComprehensiveShopifyScraper() {
               </div>
               <div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  frenchconnection fetching api direct
+                  Shopify Product Scraper
                 </h1>
-                <p className="text-gray-600 mt-1">French Connection - Complete Catalog Browser</p>
+                <p className="text-gray-600 mt-1">French Connection - Complete Catalog with Database Integration</p>
               </div>
             </div>
           </div>
@@ -416,8 +615,8 @@ export default function ComprehensiveShopifyScraper() {
           
           <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg">
             <Grid className="w-8 h-8 mb-2 opacity-80" />
-            <div className="text-3xl font-bold">{stats.totalCollections}</div>
-            <div className="text-purple-100 text-sm">Collections</div>
+            <div className="text-3xl font-bold">{selectedProducts.size}</div>
+            <div className="text-purple-100 text-sm">Selected</div>
           </div>
           
           <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg">
@@ -462,10 +661,75 @@ export default function ComprehensiveShopifyScraper() {
           {scrapingAll && (
             <div className="mt-4 bg-blue-50 border-2 border-blue-200 rounded-xl p-4 flex items-center gap-3">
               <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-              <span className="text-blue-800 font-medium">Fetching all products... This may take a moment.</span>
+              <span className="text-blue-800 font-medium">Scraping all products... This may take a moment.</span>
             </div>
           )}
         </div>
+
+        {/* Selection Controls */}
+        {selectedCollection && allProducts.length > 0 && (
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-6 mb-8 text-white">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-bold mb-1">Selection Controls</h3>
+                <p className="text-blue-100 text-sm">{selectedProducts.size} products selected</p>
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={selectAllOnPage}
+                  className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-medium flex items-center gap-2"
+                >
+                  <Check className="w-4 h-4" /> Select Page ({paginatedProducts.length})
+                </button>
+                
+                <button
+                  onClick={selectAllFiltered}
+                  className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-medium flex items-center gap-2"
+                >
+                  <Check className="w-4 h-4" /> Select All ({filteredProducts.length})
+                </button>
+                
+                <button
+                  onClick={deselectAll}
+                  className="bg-white text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors font-medium flex items-center gap-2"
+                >
+                  <XCircle className="w-4 h-4" /> Deselect All
+                </button>
+                
+                <button
+                  onClick={uploadSelectedToDatabase}
+                  disabled={selectedProducts.size === 0 || uploadingToDb}
+                  className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-bold flex items-center gap-2 shadow-lg"
+                >
+                  <Database className="w-5 h-5" /> 
+                  {uploadingToDb ? 'Uploading...' : `Upload to Database (${selectedProducts.size})`}
+                </button>
+              </div>
+            </div>
+            
+            {/* Upload Progress */}
+            {uploadingToDb && (
+              <div className="mt-4 bg-white rounded-lg p-4">
+                <div className="flex justify-between text-sm text-gray-700 mb-2">
+                  <span>Uploading products...</span>
+                  <span>{uploadProgress.current} / {uploadProgress.total}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-green-500 to-blue-500 h-full transition-all duration-300"
+                    style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between text-xs text-gray-600 mt-2">
+                  <span className="text-green-600">✓ Success: {uploadResults.success}</span>
+                  <span className="text-yellow-600">⊘ Skipped: {uploadResults.skipped}</span>
+                  <span className="text-red-600">✗ Failed: {uploadResults.failed}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Filters Section */}
         {selectedCollection && allProducts.length > 0 && (
@@ -626,7 +890,7 @@ export default function ComprehensiveShopifyScraper() {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   Previous
                 </button>
@@ -640,7 +904,7 @@ export default function ComprehensiveShopifyScraper() {
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   Next
                 </button>
@@ -656,7 +920,21 @@ export default function ComprehensiveShopifyScraper() {
               <Info className="w-12 h-12 text-blue-600" />
             </div>
             <h3 className="text-2xl font-bold text-gray-800 mb-3">Select a Collection to Start</h3>
-            <p className="text-gray-600">Choose a collection from the dropdown above to browse products</p>
+            <p className="text-gray-600 mb-6">Choose a collection from the dropdown above to browse and scrape products</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto text-left">
+              <div className="bg-blue-50 rounded-lg p-4">
+                <h4 className="font-semibold text-blue-900 mb-2">📚 Browse Collections</h4>
+                <p className="text-sm text-blue-700">View all available product collections</p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-4">
+                <h4 className="font-semibold text-green-900 mb-2">✓ Select Products</h4>
+                <p className="text-sm text-green-700">Choose products to upload to database</p>
+              </div>
+              <div className="bg-purple-50 rounded-lg p-4">
+                <h4 className="font-semibold text-purple-900 mb-2">💾 Save to Database</h4>
+                <p className="text-sm text-purple-700">Upload selected products to Supabase</p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -668,6 +946,57 @@ export default function ComprehensiveShopifyScraper() {
           </div>
         )}
       </div>
+
+      {/* Image Gallery Modal */}
+      {showImageModal && selectedProductImages && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowImageModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-800">{selectedProductImages.title}</h3>
+                <p className="text-gray-600 text-sm mt-1">{selectedProductImages.images?.length || 0} images</p>
+              </div>
+              <button
+                onClick={() => setShowImageModal(false)}
+                className="text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {selectedProductImages.images?.map((img, index) => (
+                <div key={index} className="relative group">
+                  <img 
+                    src={img.src} 
+                    alt={img.alt || `${selectedProductImages.title} - Image ${index + 1}`}
+                    className="w-full h-64 object-cover rounded-lg shadow-md"
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center">
+                    <a
+                      href={img.src}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="opacity-0 group-hover:opacity-100 bg-white text-gray-800 px-4 py-2 rounded-lg shadow-lg hover:bg-gray-100 transition-all flex items-center gap-2"
+                    >
+                      <Maximize2 className="w-4 h-4" /> View Full Size
+                    </a>
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                    {img.width} × {img.height}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
