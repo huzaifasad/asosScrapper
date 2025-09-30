@@ -481,7 +481,7 @@ export default function ComprehensiveShopifyScraper() {
     const isSelected = selectedProducts.has(product.id);
     
     return (
-      <div className={`bg-white rounded-xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 ${isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-100'}`}>
+      <div className={`bg-white xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 ${isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-100'}`}>
         <div className="relative h-64 bg-gray-100">
           {image ? (
             <img src={image.src} alt={product.title} className="w-full h-full object-cover" loading="lazy" />
@@ -496,14 +496,14 @@ export default function ComprehensiveShopifyScraper() {
                 e.stopPropagation();
                 toggleProductSelection(product.id);
               }}
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isSelected ? 'bg-blue-600 text-white' : 'bg-white text-gray-600'} shadow-lg hover:scale-110`}
+              className={`w-8 h-8 full flex items-center justify-center transition-all ${isSelected ? 'bg-blue-600 text-white' : 'bg-white text-gray-600'} shadow-lg hover:scale-110`}
             >
               {isSelected && <Check className="w-5 h-5" />}
             </button>
           </div>
           
           {hasDiscount && (
-            <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+            <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 full text-xs font-bold">
               -{discount}%
             </div>
           )}
@@ -511,10 +511,10 @@ export default function ComprehensiveShopifyScraper() {
           {product.images && product.images.length > 1 && (
             <button
               onClick={() => showImageGallery(product)}
-              className="absolute bottom-3 right-3 bg-black bg-opacity-70 text-white p-2 rounded-full hover:bg-opacity-90 transition-all"
+              className="absolute bottom-3 right-3 bg-black bg-opacity-70 text-white p-2 full hover:bg-opacity-90 transition-all"
             >
               <ImageIcon className="w-4 h-4" />
-              <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+              <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs w-5 h-5 full flex items-center justify-center">
                 {product.images.length}
               </span>
             </button>
@@ -524,16 +524,16 @@ export default function ComprehensiveShopifyScraper() {
         <div className="p-4">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {product.vendor && (
-              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full flex items-center gap-1">
+              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 full flex items-center gap-1">
                 <User className="w-3 h-3" /> {product.vendor}
               </span>
             )}
             {product.product_type && (
-              <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full flex items-center gap-1">
+              <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 full flex items-center gap-1">
                 <Box className="w-3 h-3" /> {product.product_type}
               </span>
             )}
-            <div className={`ml-auto text-xs px-2 py-1 rounded-full font-medium ${variant.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            <div className={`ml-auto text-xs px-2 py-1 full font-medium ${variant.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
               {variant.available ? '✓ In Stock' : '✗ Out of Stock'}
             </div>
           </div>
@@ -589,16 +589,14 @@ export default function ComprehensiveShopifyScraper() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+        <div className="bg-white 2xl shadow-xl p-8 mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-4 rounded-xl">
+              <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-4 xl">
                 <Package className="w-10 h-10 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Shopify Product Scraper
-                </h1>
+                
                 <p className="text-gray-600 mt-1">French Connection - Complete Catalog with Database Integration</p>
               </div>
             </div>
@@ -607,31 +605,31 @@ export default function ComprehensiveShopifyScraper() {
 
         {/* Statistics Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white xl p-6 shadow-lg">
             <Package className="w-8 h-8 mb-2 opacity-80" />
             <div className="text-3xl font-bold">{stats.totalProducts}</div>
             <div className="text-blue-100 text-sm">Total Products</div>
           </div>
           
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg">
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white xl p-6 shadow-lg">
             <Grid className="w-8 h-8 mb-2 opacity-80" />
             <div className="text-3xl font-bold">{selectedProducts.size}</div>
             <div className="text-purple-100 text-sm">Selected</div>
           </div>
           
-          <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg">
+          <div className="bg-gradient-to-br from-green-500 to-green-600 text-white xl p-6 shadow-lg">
             <DollarSign className="w-8 h-8 mb-2 opacity-80" />
             <div className="text-3xl font-bold">${stats.avgPrice}</div>
             <div className="text-green-100 text-sm">Avg Price</div>
           </div>
           
-          <div className="bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-xl p-6 shadow-lg">
+          <div className="bg-gradient-to-br from-teal-500 to-teal-600 text-white xl p-6 shadow-lg">
             <CheckCircle className="w-8 h-8 mb-2 opacity-80" />
             <div className="text-3xl font-bold">{stats.inStock}</div>
             <div className="text-teal-100 text-sm">In Stock</div>
           </div>
           
-          <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl p-6 shadow-lg">
+          <div className="bg-gradient-to-br from-red-500 to-red-600 text-white xl p-6 shadow-lg">
             <XCircle className="w-8 h-8 mb-2 opacity-80" />
             <div className="text-3xl font-bold">{stats.outOfStock}</div>
             <div className="text-red-100 text-sm">Out of Stock</div>
@@ -639,7 +637,7 @@ export default function ComprehensiveShopifyScraper() {
         </div>
 
         {/* Collection Selector */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+        <div className="bg-white 2xl shadow-xl p-6 mb-8">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <Grid className="w-6 h-6" /> Select Collection
           </h2>
@@ -647,7 +645,7 @@ export default function ComprehensiveShopifyScraper() {
           <select
             value={selectedCollection}
             onChange={(e) => handleCollectionSelect(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+            className="w-full px-4 py-3 border-2 border-gray-200 xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
             disabled={loading}
           >
             <option value="">-- Choose a Collection --</option>
@@ -659,16 +657,16 @@ export default function ComprehensiveShopifyScraper() {
           </select>
           
           {scrapingAll && (
-            <div className="mt-4 bg-blue-50 border-2 border-blue-200 rounded-xl p-4 flex items-center gap-3">
+            <div className="mt-4 bg-blue-50 border-2 border-blue-200 xl p-4 flex items-center gap-3">
               <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-              <span className="text-blue-800 font-medium">Scraping all products... This may take a moment.</span>
+              <span className="text-blue-800 font-medium">Fetching all products... This may take a moment.</span>
             </div>
           )}
         </div>
 
         {/* Selection Controls */}
         {selectedCollection && allProducts.length > 0 && (
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-6 mb-8 text-white">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 2xl shadow-xl p-6 mb-8 text-white">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg font-bold mb-1">Selection Controls</h3>
@@ -678,21 +676,21 @@ export default function ComprehensiveShopifyScraper() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={selectAllOnPage}
-                  className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-medium flex items-center gap-2"
+                  className="bg-white text-blue-600 px-4 py-2 lg hover:bg-blue-50 transition-colors font-medium flex items-center gap-2"
                 >
                   <Check className="w-4 h-4" /> Select Page ({paginatedProducts.length})
                 </button>
                 
                 <button
                   onClick={selectAllFiltered}
-                  className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-medium flex items-center gap-2"
+                  className="bg-white text-blue-600 px-4 py-2 lg hover:bg-blue-50 transition-colors font-medium flex items-center gap-2"
                 >
                   <Check className="w-4 h-4" /> Select All ({filteredProducts.length})
                 </button>
                 
                 <button
                   onClick={deselectAll}
-                  className="bg-white text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors font-medium flex items-center gap-2"
+                  className="bg-white text-red-600 px-4 py-2 lg hover:bg-red-50 transition-colors font-medium flex items-center gap-2"
                 >
                   <XCircle className="w-4 h-4" /> Deselect All
                 </button>
@@ -700,7 +698,7 @@ export default function ComprehensiveShopifyScraper() {
                 <button
                   onClick={uploadSelectedToDatabase}
                   disabled={selectedProducts.size === 0 || uploadingToDb}
-                  className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-bold flex items-center gap-2 shadow-lg"
+                  className="bg-green-500 text-white px-6 py-2 lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-bold flex items-center gap-2 shadow-lg"
                 >
                   <Database className="w-5 h-5" /> 
                   {uploadingToDb ? 'Uploading...' : `Upload to Database (${selectedProducts.size})`}
@@ -710,12 +708,12 @@ export default function ComprehensiveShopifyScraper() {
             
             {/* Upload Progress */}
             {uploadingToDb && (
-              <div className="mt-4 bg-white rounded-lg p-4">
+              <div className="mt-4 bg-white lg p-4">
                 <div className="flex justify-between text-sm text-gray-700 mb-2">
                   <span>Uploading products...</span>
                   <span>{uploadProgress.current} / {uploadProgress.total}</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div className="w-full bg-gray-200 full h-3 overflow-hidden">
                   <div 
                     className="bg-gradient-to-r from-green-500 to-blue-500 h-full transition-all duration-300"
                     style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
@@ -733,14 +731,14 @@ export default function ComprehensiveShopifyScraper() {
 
         {/* Filters Section */}
         {selectedCollection && allProducts.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+          <div className="bg-white 2xl shadow-xl p-6 mb-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <SlidersHorizontal className="w-6 h-6" /> Filters
               </h2>
               <button
                 onClick={resetFilters}
-                className="text-sm bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors"
+                className="text-sm bg-gray-100 hover:bg-gray-200 px-4 py-2 lg transition-colors"
               >
                 Reset All
               </button>
@@ -755,7 +753,7 @@ export default function ComprehensiveShopifyScraper() {
                   value={filters.searchQuery}
                   onChange={(e) => setFilters({...filters, searchQuery: e.target.value})}
                   placeholder="Search by title, vendor, type..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               
@@ -765,7 +763,7 @@ export default function ComprehensiveShopifyScraper() {
                 <select
                   value={filters.vendor}
                   onChange={(e) => setFilters({...filters, vendor: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Vendors</option>
                   {vendors.map(v => <option key={v} value={v}>{v}</option>)}
@@ -778,7 +776,7 @@ export default function ComprehensiveShopifyScraper() {
                 <select
                   value={filters.productType}
                   onChange={(e) => setFilters({...filters, productType: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Types</option>
                   {productTypes.map(t => <option key={t} value={t}>{t}</option>)}
@@ -791,7 +789,7 @@ export default function ComprehensiveShopifyScraper() {
                 <select
                   value={filters.tag}
                   onChange={(e) => setFilters({...filters, tag: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Tags</option>
                   {tags.map(t => <option key={t} value={t}>{t}</option>)}
@@ -806,7 +804,7 @@ export default function ComprehensiveShopifyScraper() {
                   value={filters.priceMin}
                   onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
                   placeholder="0"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               
@@ -818,7 +816,7 @@ export default function ComprehensiveShopifyScraper() {
                   value={filters.priceMax}
                   onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
                   placeholder="1000"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               
@@ -828,7 +826,7 @@ export default function ComprehensiveShopifyScraper() {
                 <select
                   value={filters.availability}
                   onChange={(e) => setFilters({...filters, availability: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Products</option>
                   <option value="in-stock">In Stock Only</option>
@@ -844,13 +842,13 @@ export default function ComprehensiveShopifyScraper() {
               <div className="flex gap-2">
                 <button
                   onClick={exportToJSON}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
+                  className="bg-blue-600 text-white px-4 py-2 lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
                 >
                   <Download className="w-4 h-4" /> Export JSON
                 </button>
                 <button
                   onClick={exportToCSV}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2 transition-colors"
+                  className="bg-green-600 text-white px-4 py-2 lg hover:bg-green-700 flex items-center gap-2 transition-colors"
                 >
                   <Download className="w-4 h-4" /> Export CSV
                 </button>
@@ -861,7 +859,7 @@ export default function ComprehensiveShopifyScraper() {
 
         {/* Error Display */}
         {error && (
-          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-8 flex items-start gap-3">
+          <div className="bg-red-50 border-2 border-red-200 xl p-4 mb-8 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
             <div className="text-red-800">{error}</div>
           </div>
@@ -869,7 +867,7 @@ export default function ComprehensiveShopifyScraper() {
 
         {/* Loading State */}
         {loading && (
-          <div className="bg-white rounded-2xl shadow-xl p-16 text-center">
+          <div className="bg-white 2xl shadow-xl p-16 text-center">
             <Loader2 className="w-16 h-16 animate-spin text-blue-600 mx-auto mb-4" />
             <p className="text-gray-600 text-lg">Loading products...</p>
           </div>
@@ -886,11 +884,11 @@ export default function ComprehensiveShopifyScraper() {
             
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="bg-white rounded-2xl shadow-xl p-6 flex items-center justify-between">
+              <div className="bg-white 2xl shadow-xl p-6 flex items-center justify-between">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+                  className="px-6 py-3 bg-blue-600 text-white lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   Previous
                 </button>
@@ -904,7 +902,7 @@ export default function ComprehensiveShopifyScraper() {
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+                  className="px-6 py-3 bg-blue-600 text-white lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   Next
                 </button>
@@ -915,22 +913,22 @@ export default function ComprehensiveShopifyScraper() {
 
         {/* Empty State */}
         {!loading && !selectedCollection && (
-          <div className="bg-white rounded-2xl shadow-xl p-16 text-center">
-            <div className="bg-gradient-to-br from-blue-100 to-purple-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="bg-white 2xl shadow-xl p-16 text-center">
+            <div className="bg-gradient-to-br from-blue-100 to-purple-100 w-24 h-24 full flex items-center justify-center mx-auto mb-6">
               <Info className="w-12 h-12 text-blue-600" />
             </div>
             <h3 className="text-2xl font-bold text-gray-800 mb-3">Select a Collection to Start</h3>
             <p className="text-gray-600 mb-6">Choose a collection from the dropdown above to browse and scrape products</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto text-left">
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-blue-50 lg p-4">
                 <h4 className="font-semibold text-blue-900 mb-2">📚 Browse Collections</h4>
                 <p className="text-sm text-blue-700">View all available product collections</p>
               </div>
-              <div className="bg-green-50 rounded-lg p-4">
+              <div className="bg-green-50 lg p-4">
                 <h4 className="font-semibold text-green-900 mb-2">✓ Select Products</h4>
                 <p className="text-sm text-green-700">Choose products to upload to database</p>
               </div>
-              <div className="bg-purple-50 rounded-lg p-4">
+              <div className="bg-purple-50 lg p-4">
                 <h4 className="font-semibold text-purple-900 mb-2">💾 Save to Database</h4>
                 <p className="text-sm text-purple-700">Upload selected products to Supabase</p>
               </div>
@@ -939,7 +937,7 @@ export default function ComprehensiveShopifyScraper() {
         )}
 
         {!loading && selectedCollection && filteredProducts.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-xl p-16 text-center">
+          <div className="bg-white 2xl shadow-xl p-16 text-center">
             <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-600 mb-2">No Products Found</h3>
             <p className="text-gray-500">Try adjusting your filters or select a different collection</p>
@@ -954,7 +952,7 @@ export default function ComprehensiveShopifyScraper() {
           onClick={() => setShowImageModal(false)}
         >
           <div 
-            className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-auto"
+            className="bg-white 2xl max-w-5xl w-full max-h-[90vh] overflow-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
@@ -964,7 +962,7 @@ export default function ComprehensiveShopifyScraper() {
               </div>
               <button
                 onClick={() => setShowImageModal(false)}
-                className="text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="text-gray-500 hover:text-gray-700 p-2 lg hover:bg-gray-100 transition-colors"
               >
                 <XCircle className="w-6 h-6" />
               </button>
@@ -976,14 +974,14 @@ export default function ComprehensiveShopifyScraper() {
                   <img 
                     src={img.src} 
                     alt={img.alt || `${selectedProductImages.title} - Image ${index + 1}`}
-                    className="w-full h-64 object-cover rounded-lg shadow-md"
+                    className="w-full h-64 object-cover lg shadow-md"
                   />
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all lg flex items-center justify-center">
                     <a
                       href={img.src}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="opacity-0 group-hover:opacity-100 bg-white text-gray-800 px-4 py-2 rounded-lg shadow-lg hover:bg-gray-100 transition-all flex items-center gap-2"
+                      className="opacity-0 group-hover:opacity-100 bg-white text-gray-800 px-4 py-2 lg shadow-lg hover:bg-gray-100 transition-all flex items-center gap-2"
                     >
                       <Maximize2 className="w-4 h-4" /> View Full Size
                     </a>
