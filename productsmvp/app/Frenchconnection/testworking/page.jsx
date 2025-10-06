@@ -471,176 +471,119 @@ export default function ComprehensiveShopifyScraper() {
   };
 
   // Product Card Component
-
-
-  // Product Card Component
-const ProductCard = ({ product }) => {
-  if (!product) return null;
-  
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const variant = product.variants?.[0] || {};
-  const images = product.images || [];
-  const hasDiscount = variant.compare_at_price && parseFloat(variant.compare_at_price) > parseFloat(variant.price);
-  const discount = hasDiscount ? (((parseFloat(variant.compare_at_price) - parseFloat(variant.price)) / parseFloat(variant.compare_at_price)) * 100).toFixed(0) : 0;
-  const isSelected = selectedProducts.has(product.id);
-  
-  const nextImage = (e) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev + 1) % images.length);
-  };
-  
-  const prevImage = (e) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
-  
-  return (
-    <div className={`bg-white xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 ${isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-100'}`}>
-      <div className="relative h-64 bg-gray-100 group">
-        {images.length > 0 ? (
-          <>
-            <img 
-              src={images[currentImageIndex].src} 
-              alt={product.title} 
-              className="w-full h-full object-contain transition-opacity duration-300" 
-              loading="lazy" 
-            />
-            
-            {/* Carousel Navigation */}
-            {images.length > 1 && (
-              <>
-                <button
-                  onClick={prevImage}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all z-10"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                
-                <button
-                  onClick={nextImage}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all z-10"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-                
-                {/* Image Indicators */}
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                  {images.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentImageIndex(idx);
-                      }}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        idx === currentImageIndex 
-                          ? 'bg-white w-6' 
-                          : 'bg-white bg-opacity-50 hover:bg-opacity-75'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center"><Package className="w-16 h-16 text-gray-300" /></div>
-        )}
-        
-        {/* Selection Checkbox */}
-        <div className="absolute top-3 left-3 z-10">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleProductSelection(product.id);
-            }}
-            className={`w-8 h-8 full flex items-center justify-center transition-all ${isSelected ? 'bg-blue-600 text-white' : 'bg-white text-gray-600'} shadow-lg hover:scale-110`}
-          >
-            {isSelected && <Check className="w-5 h-5" />}
-          </button>
-        </div>
-        
-        {hasDiscount && (
-          <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 full text-xs font-bold z-10">
-            -{discount}%
-          </div>
-        )}
-        
-        {/* Image Count Badge */}
-        {images.length > 1 && (
-          <div className="absolute top-14 right-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs font-medium z-10">
-            {currentImageIndex + 1} / {images.length}
-          </div>
-        )}
-      </div>
-      
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          {product.vendor && (
-            <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 full flex items-center gap-1">
-              <User className="w-3 h-3" /> {product.vendor}
-            </span>
+  const ProductCard = ({ product }) => {
+    if (!product) return null;
+    
+    const variant = product.variants?.[0] || {};
+    const image = product.images?.[0];
+    const hasDiscount = variant.compare_at_price && parseFloat(variant.compare_at_price) > parseFloat(variant.price);
+    const discount = hasDiscount ? (((parseFloat(variant.compare_at_price) - parseFloat(variant.price)) / parseFloat(variant.compare_at_price)) * 100).toFixed(0) : 0;
+    const isSelected = selectedProducts.has(product.id);
+    
+    return (
+      <div className={`bg-white xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 ${isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-100'}`}>
+        <div className="relative h-64 bg-gray-100">
+          {image ? (
+            <img src={image.src} alt={product.title} className="w-full h-full object-cover" loading="lazy" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center"><Package className="w-16 h-16 text-gray-300" /></div>
           )}
-          {product.product_type && (
-            <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 full flex items-center gap-1">
-              <Box className="w-3 h-3" /> {product.product_type}
-            </span>
-          )}
-          <div className={`ml-auto text-xs px-2 py-1 full font-medium ${variant.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-            {variant.available ? '✓ In Stock' : '✗ Out of Stock'}
+          
+          {/* Selection Checkbox */}
+          <div className="absolute top-3 left-3">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleProductSelection(product.id);
+              }}
+              className={`w-8 h-8 full flex items-center justify-center transition-all ${isSelected ? 'bg-blue-600 text-white' : 'bg-white text-gray-600'} shadow-lg hover:scale-110`}
+            >
+              {isSelected && <Check className="w-5 h-5" />}
+            </button>
           </div>
-        </div>
-        
-        <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2 h-12">{product.title}</h3>
-        
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xl font-bold text-green-600">${variant.price || '0.00'}</span>
+          
           {hasDiscount && (
-            <span className="text-sm text-gray-500 line-through">${variant.compare_at_price}</span>
-          )}
-        </div>
-        
-        {/* Product Details */}
-        <div className="space-y-2 mb-3">
-          {variant.sku && (
-            <div className="text-xs text-gray-600">
-              <span className="font-medium">SKU:</span> {variant.sku}
+            <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 full text-xs font-bold">
+              -{discount}%
             </div>
           )}
-          {variant.weight && (
-            <div className="text-xs text-gray-600">
-              <span className="font-medium">Weight:</span> {variant.weight} {variant.weight_unit}
-            </div>
-          )}
-          {variant.inventory_quantity !== undefined && (
-            <div className="text-xs text-gray-600">
-              <span className="font-medium">Stock:</span> {variant.inventory_quantity} units
-            </div>
-          )}
-        </div>
-        
-        {product.tags && product.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
-            {(Array.isArray(product.tags) ? product.tags : product.tags.split(',')).slice(0, 3).map((tag, i) => (
-              <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded flex items-center gap-1">
-                <Tag className="w-3 h-3" /> {typeof tag === 'string' ? tag.trim() : tag}
+          
+          {product.images && product.images.length > 1 && (
+            <button
+              onClick={() => showImageGallery(product)}
+              className="absolute bottom-3 right-3 bg-black bg-opacity-70 text-white p-2 full hover:bg-opacity-90 transition-all"
+            >
+              <ImageIcon className="w-4 h-4" />
+              <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs w-5 h-5 full flex items-center justify-center">
+                {product.images.length}
               </span>
-            ))}
-          </div>
-        )}
+            </button>
+          )}
+        </div>
         
-        <div className="pt-3 border-t border-gray-100 flex justify-between items-center text-xs text-gray-600">
-          <span>{product.variants?.length || 0} variant{(product.variants?.length || 0) !== 1 ? 's' : ''}</span>
-          <span>{product.images?.length || 0} image{(product.images?.length || 0) !== 1 ? 's' : ''}</span>
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            {product.vendor && (
+              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 full flex items-center gap-1">
+                <User className="w-3 h-3" /> {product.vendor}
+              </span>
+            )}
+            {product.product_type && (
+              <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 full flex items-center gap-1">
+                <Box className="w-3 h-3" /> {product.product_type}
+              </span>
+            )}
+            <div className={`ml-auto text-xs px-2 py-1 full font-medium ${variant.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              {variant.available ? '✓ In Stock' : '✗ Out of Stock'}
+            </div>
+          </div>
+          
+          <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2 h-12">{product.title}</h3>
+          
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xl font-bold text-green-600">${variant.price || '0.00'}</span>
+            {hasDiscount && (
+              <span className="text-sm text-gray-500 line-through">${variant.compare_at_price}</span>
+            )}
+          </div>
+          
+          {/* Product Details */}
+          <div className="space-y-2 mb-3">
+            {variant.sku && (
+              <div className="text-xs text-gray-600">
+                <span className="font-medium">SKU:</span> {variant.sku}
+              </div>
+            )}
+            {variant.weight && (
+              <div className="text-xs text-gray-600">
+                <span className="font-medium">Weight:</span> {variant.weight} {variant.weight_unit}
+              </div>
+            )}
+            {variant.inventory_quantity !== undefined && (
+              <div className="text-xs text-gray-600">
+                <span className="font-medium">Stock:</span> {variant.inventory_quantity} units
+              </div>
+            )}
+          </div>
+          
+          {product.tags && product.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-3">
+              {(Array.isArray(product.tags) ? product.tags : product.tags.split(',')).slice(0, 3).map((tag, i) => (
+                <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded flex items-center gap-1">
+                  <Tag className="w-3 h-3" /> {typeof tag === 'string' ? tag.trim() : tag}
+                </span>
+              ))}
+            </div>
+          )}
+          
+          <div className="pt-3 border-t border-gray-100 flex justify-between items-center text-xs text-gray-600">
+            <span>{product.variants?.length || 0} variant{(product.variants?.length || 0) !== 1 ? 's' : ''}</span>
+            <span>{product.images?.length || 0} image{(product.images?.length || 0) !== 1 ? 's' : ''}</span>
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
