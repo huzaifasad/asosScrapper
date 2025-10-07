@@ -42,3 +42,8 @@ next-env.d.ts
 
 .vercel
 /working
+
+# Ignore all files in app/Frenchconnection except page.jsx
+/app/Frenchconnection/*
+!/app/Frenchconnection/page.jsx
+
