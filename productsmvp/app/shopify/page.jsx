@@ -13,9 +13,9 @@ const supabase = createClient(
 // Default Shopify stores
 const DEFAULT_STORES = [
   { name: 'French Connection', url: 'https://www.frenchconnection.com', active: true },
-  { name: 'Gymshark', url: 'https://www.gymshark.com', active: false },
+//   { name: 'Gymshark', url: 'https://www.gymshark.com', active: false },
   { name: 'Allbirds', url: 'https://www.allbirds.com', active: false },
-  { name: 'Fashion Nova', url: 'https://www.fashionnova.com', active: false },
+//   { name: 'Fashion Nova', url: 'https://www.fashionnova.com', active: false },
 ];
 
 export default function DynamicShopifyScraper() {

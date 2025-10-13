@@ -811,6 +811,7 @@ const renderProductImages = (product) => {
             Product Scraper
           </h1>
          <a href="/Frenchconnection" className="b-2 px-4 py-4 bg-black text-white mt-20 hover:bg-white hover:text-black">French connection</a>
+         <a href="/shopify" className="b-2 px-4 py-4 bg-black text-white mt-20 hover:bg-white hover:text-black  m-20">ALL Shopify store </a>
           <p className="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed text-pretty">
             Search products or browse by category with real-time progress tracking
           </p>
