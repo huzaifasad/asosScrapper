@@ -964,7 +964,22 @@ const ProductCard = ({ product }) => {
           {showAddStore && (
             <div className="bg-blue-50 p-5 mb-5 border border-blue-200">
               <h3 className="font-semibold mb-4 text-blue-900 text-lg">Add New Shopify Store</h3>
-             
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="Store Name (e.g., Frech Connection)"
+                  value={newStoreName}
+                  onChange={(e) => setNewStoreName(e.target.value)}
+                  className="px-4 py-3 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                />
+                <input
+                  type="url"
+                  placeholder="Store URL (e.g., https://www.frenchconnection.com)"
+                  value={newStoreUrl}
+                  onChange={(e) => setNewStoreUrl(e.target.value)}
+                  className="px-4 py-3 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                />
+              </div>
               <div className="flex gap-3 mt-4">
                 <button
                   onClick={addStore}
