@@ -47,7 +47,8 @@ export default function DynamicShopifyScraper() {
   // Quick View State
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [showQuickView, setShowQuickView] = useState(false);
-  
+  const [checkingShopify, setCheckingShopify] = useState(false); // renamed
+
   // Filter States
   const [filters, setFilters] = useState({
     vendor: '',
@@ -97,30 +98,52 @@ export default function DynamicShopifyScraper() {
     }
   }, [currentStore]);
 
-  // Add new store
-  const addStore = () => {
-    if (!newStoreName || !newStoreUrl) {
-      alert('Please enter both store name and URL');
+
+
+
+  // const [loading, setLoading] = useState(false);
+
+ const addStore = async () => {
+  if (!newStoreName || !newStoreUrl) {
+    alert("Please enter both store name and URL");
+    return;
+  }
+
+  try {
+    setCheckingShopify(true);
+    const url = new URL(newStoreUrl);
+    const shopifyCheckUrl = `${url.origin}/products.json`;
+
+    const response = await fetch(shopifyCheckUrl);
+
+    if (!response.ok) {
+      alert("❌ This site is not using Shopify .");
       return;
     }
 
-    try {
-      const url = new URL(newStoreUrl);
+    const data = await response.json();
+
+    if (data.products) {
       const newStore = {
         name: newStoreName,
         url: url.origin,
-        active: false
+        active: false,
       };
 
-      setStores([...stores, newStore]);
-      setNewStoreName('');
-      setNewStoreUrl('');
+      setStores((prev) => [...prev, newStore]);
+      setNewStoreName("");
+      setNewStoreUrl("");
       setShowAddStore(false);
-      alert(`Store "${newStoreName}" added successfully!`);
-    } catch (err) {
-      alert('Invalid URL format. Please enter a valid URL (e.g., https://example.com)');
+      alert(`✅ Store "${newStoreName}" added successfully!`);
+    } else {
+      alert("❌ This site is not a valid Shopify store.");
     }
-  };
+  } catch (err) {
+    alert("❌ “This store is not built on Shopify — please enter a Shopify store URL.");
+  } finally {
+    setCheckingShopify(false);
+  }
+};
 
   // Delete store
   const deleteStore = (index) => {
@@ -952,6 +975,7 @@ const ProductCard = ({ product }) => {
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900">
               <Store className="w-6 h-6" /> Manage Stores
+              
             </h2>
             <button
               onClick={() => setShowAddStore(!showAddStore)}
@@ -959,6 +983,7 @@ const ProductCard = ({ product }) => {
             >
               <Plus className="w-4 h-4" /> Add New Store
             </button>
+          
           </div>
 
           {showAddStore && (
@@ -981,12 +1006,21 @@ const ProductCard = ({ product }) => {
                 />
               </div>
               <div className="flex gap-3 mt-4">
-                <button
-                  onClick={addStore}
-                  className="bg-blue-600 text-white px-6 py-2.5 hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium"
-                >
-                  <Check className="w-4 h-4" /> Add Store
-                </button>
+              <button
+        onClick={addStore}
+        disabled={loading}
+        className="bg-blue-600 text-white px-6 py-2.5 hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium rounded"
+      >
+        {loading ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" /> Checking...
+          </>
+        ) : (
+          <>
+            <Check className="w-4 h-4" /> Add Store
+          </>
+        )}
+      </button>
                 <button
                   onClick={() => setShowAddStore(false)}
                   className="bg-gray-200 text-gray-700 px-5 py-2.5 hover:bg-gray-300 transition-colors font-medium"
