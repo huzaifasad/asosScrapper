@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Package, Loader2, Download, Filter, Grid, SlidersHorizontal, Tag, User, Box, DollarSign, CheckCircle, XCircle, Info, AlertCircle, Database, Check, Image as ImageIcon, Maximize2, Store, Plus, Trash2, Globe, Eye, X } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+// import toast from 'react-hot-toast'
+import toast, { Toaster } from "react-hot-toast";
+
 
 // Initialize Supabase Client
 const supabase = createClient(
@@ -117,7 +120,8 @@ export default function DynamicShopifyScraper() {
     const response = await fetch(shopifyCheckUrl);
 
     if (!response.ok) {
-      alert("❌ This site is not using Shopify .");
+      // alert("❌ This site is not using Shopify .");
+       toast.error("❌ This site is not using Shopify .")
       return;
     }
 
@@ -134,12 +138,17 @@ export default function DynamicShopifyScraper() {
       setNewStoreName("");
       setNewStoreUrl("");
       setShowAddStore(false);
-      alert(`✅ Store "${newStoreName}" added successfully!`);
+      // alert();
+       toast.success(`✅ Store "${newStoreName}" added successfully!`)
     } else {
-      alert("❌ This site is not a valid Shopify store.");
+      alert();
+          toast.error("❌ This site is not a valid Shopify store.")
+
     }
   } catch (err) {
-    alert("❌ “This store is not built on Shopify — please enter a Shopify store URL.");
+    // alert();
+        toast.error("❌ “This store is not built on Shopify — please enter a Shopify store URL.")
+
   } finally {
     setCheckingShopify(false);
   }
