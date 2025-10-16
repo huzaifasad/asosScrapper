@@ -15,12 +15,166 @@ const supabase = createClient(
 
 // Default Shopify stores
 const DEFAULT_STORES = [
-  { name: 'French Connection', url: 'https://www.frenchconnection.com', active: true },
-//   { name: 'Gymshark', url: 'https://www.gymshark.com', active: false },
+  { name: 'Kith', url: 'https://kith.com', active: false },
   { name: 'Allbirds', url: 'https://www.allbirds.com', active: false },
-//   { name: 'Fashion Nova', url: 'https://www.fashionnova.com', active: false },
+  { name: 'Brooklinen', url: 'https://www.brooklinen.com', active: false },
+  { name: 'Rothy\'s', url: 'https://rothys.com', active: false },
+  { name: 'Taylor Stitch', url: 'https://www.taylorstitch.com', active: false },
+  { name: 'Chubbies', url: 'https://chubbies.com', active: false },
+  { name: 'Untuckit', url: 'https://untuckit.com', active: false },
+  { name: 'Mack Weldon', url: 'https://mackweldon.com', active: false },
+  { name: 'ThirdLove', url: 'https://www.thirdlove.com', active: false },
+  { name: 'Cuyana', url: 'https://cuyana.com', active: false },
+  { name: 'Hill House Home', url: 'https://hillhousehome.com', active: false },
+  { name: 'Parachute Home', url: 'https://parachutehome.com', active: false },
+  { name: 'Outerknown', url: 'https://www.outerknown.com', active: false },
+  { name: 'Everlane', url: 'https://www.everlane.com', active: false },
+  { name: 'Casper', url: 'https://casper.com', active: false },
+  { name: 'Tuft & Needle', url: 'https://www.tuftandneedle.com', active: false },
+  { name: 'Floyd Home', url: 'https://floydhome.com', active: false },
+  { name: 'The Citizenry', url: 'https://the-citizenry.com', active: false },
+  { name: 'Our Place', url: 'https://fromourplace.com', active: false },
+  { name: 'Greats', url: 'https://greats.com', active: false },
+  { name: 'Oliver Cabell', url: 'https://www.olivercabell.com', active: false },
+  { name: 'Cariuma', url: 'https://cariuma.com', active: false },
+  { name: 'Birdies', url: 'https://birdies.com', active: false },
+  { name: 'Champion', url: 'https://www.champion.com', active: false },
+  { name: 'Aime Leon Dore', url: 'https://www.aimeleondore.com', active: false },
+  { name: 'Noah', url: 'https://www.noahny.com', active: false },
+  { name: 'Fear of God', url: 'https://fearofgod.com', active: false },
+  { name: 'Amiri', url: 'https://amiri.com', active: false },
+  { name: 'John Elliott', url: 'https://johnelliott.com', active: false },
+  { name: 'A Cold Wall', url: 'https://acoldwall.com', active: false },
+  { name: 'Martine Rose', url: 'https://martine-rose.com', active: false },
+  { name: 'Grace Wales Bonner', url: 'https://walesbonner.net', active: false },
+  { name: 'Simone Rocha', url: 'https://simonerocha.com', active: false },
+  { name: 'Molly Goddard', url: 'https://mollygoddard.com', active: false },
+  { name: 'Sophie Bille Brahe', url: 'https://sophiebillebrahe.com', active: false },
+  { name: 'Completedworks', url: 'https://completedworks.com', active: false },
+  { name: 'Edge of Ember', url: 'https://edgeofember.com', active: false },
+  { name: 'Missoma', url: 'https://missoma.com', active: false },
+  { name: 'Oscar de la Renta', url: 'https://www.oscardelarenta.com', active: false },
+  { name: 'Zac Posen', url: 'https://zacposen.com', active: false },
+  { name: 'Jason Wu', url: 'https://jasonwustudio.com', active: false },
+  { name: 'Prabal Gurung', url: 'https://prabalgurung.com', active: false },
+  { name: 'Joseph Altuzarra', url: 'https://altuzarra.com', active: false },
+  { name: 'Monse', url: 'https://monse.com', active: false },
+  { name: 'Collina Strada', url: 'https://collinastrada.com', active: false },
+  { name: 'Batsheva', url: 'https://batsheva.com', active: false },
+  { name: 'Staud', url: 'https://staud.clothing', active: false },
+  { name: 'Cecilie Bahnsen', url: 'https://ceciliebahnsen.com', active: false },
+  { name: 'House of Sunny', url: 'https://houseofsunny.co.uk', active: false },
+  { name: 'With Jéan', url: 'https://withjean.com', active: false },
+  { name: 'Rat & Boa', url: 'https://ratandboa.com', active: false },
+  { name: 'Faithfull the Brand', url: 'https://faithfullthebrand.com', active: false },
+  { name: 'Christopher Esber', url: 'https://christopheresber.com', active: false },
+  { name: 'Manning Cartell', url: 'https://manningcartell.com', active: false },
+  { name: 'Bec & Bridge', url: 'https://becandbridge.com', active: false },
+  { name: 'Aje Athletica', url: 'https://ajeathletica.com', active: false },
+  { name: 'Beyond Yoga', url: 'https://beyondyoga.com', active: false },
+  { name: 'Tully Lou', url: 'https://tullylou.com', active: false },
+  { name: 'Year of Ours', url: 'https://yearofours.com', active: false },
+  { name: 'Ten Thousand', url: 'https://tenthousand.cc', active: false },
+  { name: 'Bearbottom Clothing', url: 'https://bearbottomclothing.com', active: false },
+  { name: 'Southern Tide', url: 'https://southerntide.com', active: false },
+  { name: 'Southern Marsh', url: 'https://southernmarsh.com', active: false },
+  { name: 'The Black Tux', url: 'https://theblacktux.com', active: false },
+  { name: 'Rent the Runway', url: 'https://www.renttherunway.com', active: false },
+  { name: 'A.L.C.', url: 'https://alcltd.com', active: false },
+  { name: 'AG Jeans', url: 'https://agjeans.com', active: false },
+  { name: 'Joe\'s Jeans', url: 'https://joesjeans.com', active: false },
+  { name: 'Hudson Jeans', url: 'https://hudsonjeans.com', active: false },
+  { name: 'Mother Denim', url: 'https://motherdenim.com', active: false },
+  { name: 'DL1961', url: 'https://dl1961.com', active: false },
+  { name: 'Good American', url: 'https://goodamerican.com', active: false },
+  { name: 'Re/Done', url: 'https://shopredone.com', active: false },
+  { name: 'A Gold E', url: 'https://agolde.com', active: false },
+  { name: 'Hey Dude', url: 'https://heydude.com', active: false },
+  { name: 'Koio', url: 'https://koio.co', active: false },
+  { name: 'Thursday Boots', url: 'https://thursdayboots.com', active: false },
+  { name: 'Blundstone', url: 'https://blundstone.com', active: false },
+  { name: 'Keen', url: 'https://keenfootwear.com', active: false },
+  { name: 'Sanuk', url: 'https://sanuk.com', active: false },
+  { name: 'Olukai', url: 'https://olukai.com', active: false },
+  { name: 'Margaux', url: 'https://margauxny.com', active: false },
+  { name: 'Sarah Flint', url: 'https://sarahflint.com', active: false },
+  { name: 'M.Gemi', url: 'https://mgemi.com', active: false },
+  { name: 'Beckett Simonon', url: 'https://beckettsimonon.com', active: false },
+  { name: 'Meermin', url: 'https://meermin.com', active: false },
+  { name: 'Rancourt & Co.', url: 'https://rancourtandcompany.com', active: false },
+  { name: 'Russell Moccasin', url: 'https://russellmoccasin.com', active: false },
+  { name: 'Filson', url: 'https://filson.com', active: false },
+  { name: 'Outdoor Research', url: 'https://outdoorresearch.com', active: false },
+  { name: 'Black Diamond', url: 'https://blackdiamondequipment.com', active: false },
+  { name: 'Campmor', url: 'https://campmor.com', active: false },
+  { name: 'Eastern Mountain Sports', url: 'https://ems.com', active: false },
+  { name: 'Sunski', url: 'https://sunski.com', active: false },
+  { name: 'Shady Rays', url: 'https://shadyrays.com', active: false },
+  { name: 'Blenders Eyewear', url: 'https://blenderseyewear.com', active: false },
+  { name: 'Knockaround', url: 'https://knockaround.com', active: false },
+  { name: 'Felix Gray', url: 'https://felixgray.com', active: false },
+  { name: 'Peepers', url: 'https://peepers.com', active: false },
+  { name: 'Electric', url: 'https://electriccalifornia.com', active: false },
+  { name: 'VonZipper', url: 'https://vonzipper.com', active: false },
+  { name: 'Polaroid Eyewear', url: 'https://polaroideyewear.com', active: false },
+  { name: 'Revo', url: 'https://revo.com', active: false },
+  { name: 'Issey Miyake', url: 'https://isseymiyake.com', active: false },
+  { name: 'Bape', url: 'https://bape.com', active: false },
+  { name: 'Neighborhood', url: 'https://neighborhood.jp', active: false },
+  { name: 'MATE the Label', url: 'https://matethelabel.com', active: false },
+  { name: 'Coperni', url: 'https://coperni.com', active: false },
+  { name: 'Dylan Lex', url: 'https://dylanlex.com', active: false },
+  { name: 'Wray', url: 'https://wray.nyc', active: false },
+  { name: 'Bode', url: 'https://bode.com', active: false },
+  { name: 'Batsheva', url: 'https://batsheva.com', active: false },
+  { name: 'Staud', url: 'https://staud.clothing', active: false },
+  { name: 'Cecilie Bahnsen', url: 'https://ceciliebahnsen.com', active: false },
+  { name: 'House of Sunny', url: 'https://houseofsunny.co.uk', active: false },
+  { name: 'With Jéan', url: 'https://withjean.com', active: false },
+  { name: 'Rat & Boa', url: 'https://ratandboa.com', active: false },
+  { name: 'Faithfull the Brand', url: 'https://faithfullthebrand.com', active: false },
+  { name: 'Christopher Esber', url: 'https://christopheresber.com', active: false },
+  { name: 'Manning Cartell', url: 'https://manningcartell.com', active: false },
+  { name: 'Bec & Bridge', url: 'https://becandbridge.com', active: false },
+  { name: 'Aje Athletica', url: 'https://ajeathletica.com', active: false },
+  { name: 'Beyond Yoga', url: 'https://beyondyoga.com', active: false },
+  { name: 'Tully Lou', url: 'https://tullylou.com', active: false },
+  { name: 'Year of Ours', url: 'https://yearofours.com', active: false },
+  { name: 'Ten Thousand', url: 'https://tenthousand.cc', active: false },
+  { name: 'Bearbottom Clothing', url: 'https://bearbottomclothing.com', active: false },
+  { name: 'Southern Tide', url: 'https://southerntide.com', active: false },
+  { name: 'Southern Marsh', url: 'https://southernmarsh.com', active: false },
+  { name: 'The Black Tux', url: 'https://theblacktux.com', active: false },
+  { name: 'Rent the Runway', url: 'https://www.renttherunway.com', active: false },
+  { name: 'A.L.C.', url: 'https://alcltd.com', active: false },
+  { name: 'AG Jeans', url: 'https://agjeans.com', active: false },
+  { name: 'Joe\'s Jeans', url: 'https://joesjeans.com', active: false },
+  { name: 'Hudson Jeans', url: 'https://hudsonjeans.com', active: false },
+  { name: 'Mother Denim', url: 'https://motherdenim.com', active: false },
+  { name: 'DL1961', url: 'https://dl1961.com', active: false },
+  { name: 'Good American', url: 'https://goodamerican.com', active: false },
+  { name: 'Re/Done', url: 'https://shopredone.com', active: false },
+  { name: 'A Gold E', url: 'https://agolde.com', active: false },
+  { name: 'Hey Dude', url: 'https://heydude.com', active: false },
+  { name: 'Koio', url: 'https://koio.co', active: false },
+  { name: 'Thursday Boots', url: 'https://thursdayboots.com', active: false },
+  { name: 'Blundstone', url: 'https://blundstone.com', active: false },
+  { name: 'Keen', url: 'https://keenfootwear.com', active: false },
+  { name: 'Sanuk', url: 'https://sanuk.com', active: false },
+  { name: 'Olukai', url: 'https://olukai.com', active: false },
+  { name: 'Margaux', url: 'https://margauxny.com', active: false },
+  { name: 'Sarah Flint', url: 'https://sarahflint.com', active: false },
+  { name: 'M.Gemi', url: 'https://mgemi.com', active: false },
+  { name: 'Beckett Simonon', url: 'https://beckettsimonon.com', active: false },
+  { name: 'Meermin', url: 'https://meermin.com', active: false },
+  { name: 'Rancourt & Co.', url: 'https://rancourtandcompany.com', active: false },
+  { name: 'Russell Moccasin', url: 'https://russellmoccasin.com', active: false },
+  { name: 'Filson', url: 'https://filson.com', active: false },
+  { name: 'Outdoor Research', url: 'https://outdoorresearch.com', active: false },
+  { name: 'Black Diamond', url: 'https://blackdiamondequipment.com', active: false },
+  { name: 'Campmor', url: 'https://campmor.com', active: false },
+  { name: 'Eastern Mountain Sports', url: 'https://ems.com', active: false }
 ];
-
 export default function DynamicShopifyScraper() {
   // Store Management - Fixed hydration issue by initializing with DEFAULT_STORES
   const [stores, setStores] = useState(DEFAULT_STORES);
@@ -28,7 +182,8 @@ export default function DynamicShopifyScraper() {
   const [showAddStore, setShowAddStore] = useState(false);
   const [newStoreName, setNewStoreName] = useState('');
   const [newStoreUrl, setNewStoreUrl] = useState('');
-  
+    const [searchQuery, setSearchQuery] = useState('');
+
   // State Management
   const [collections, setCollections] = useState([]);
   const [selectedCollection, setSelectedCollection] = useState('');
@@ -102,7 +257,10 @@ export default function DynamicShopifyScraper() {
   }, [currentStore]);
 
 
-
+  const filteredStores = stores.filter(store =>
+    store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    store.url.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // const [loading, setLoading] = useState(false);
 
@@ -1039,46 +1197,186 @@ const ProductCard = ({ product }) => {
               </div>
             </div>
           )}
+ <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            Shopify Store Manager
+          </h1>
+          <p className="text-gray-600">
+            Manage and switch between multiple Shopify stores
+          </p>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {stores.map((store, index) => (
-              <div
-                key={index}
-                className={`p-5 border-2 transition-all cursor-pointer ${
-                  currentStore.url === store.url
-                    ? 'border-blue-600 bg-blue-50'
-                    : 'border-gray-200 hover:border-blue-400 hover:bg-gray-50'
-                }`}
-                onClick={() => switchStore(store)}
+        {/* Current Store Card */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border-2 border-blue-500">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <Store className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Currently Active</p>
+              <h2 className="text-2xl font-bold text-gray-900">{currentStore.name}</h2>
+            </div>
+          </div>
+          <p className="text-sm text-gray-600 mt-2">{currentStore.url}</p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search stores by name or URL..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-10 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Store className="w-4 h-4 text-blue-600" />
-                      <h3 className="font-bold text-gray-900">{store.name}</h3>
-                    </div>
-                    <p className="text-xs text-gray-600 break-all mb-3">{store.url}</p>
-                    {currentStore.url === store.url && (
-                      <span className="inline-block text-xs bg-blue-600 text-white px-3 py-1 font-medium">
-                        Active Store
-                      </span>
-                    )}
-                  </div>
-                  {stores.length > 1 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteStore(index);
-                      }}
-                      className="text-red-600 hover:text-red-800 p-1.5 hover:bg-red-50 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+
+          {/* Add Store Button */}
+          <button
+            onClick={() => setShowAddStore(!showAddStore)}
+            className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all flex items-center justify-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Add New Store
+          </button>
+
+          {/* Add Store Form */}
+          {showAddStore && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
+              <h3 className="font-bold text-gray-900 mb-3">Add New Shopify Store</h3>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Store Name"
+                  value={newStoreName}
+                  onChange={(e) => setNewStoreName(e.target.value)}
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                />
+                <input
+                  type="url"
+                  placeholder="Store URL (e.g., https://example.com)"
+                  value={newStoreUrl}
+                  onChange={(e) => setNewStoreUrl(e.target.value)}
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={addStore}
+                    disabled={checkingShopify}
+                    className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-semibold transition-all"
+                  >
+                    {checkingShopify ? 'Verifying...' : 'Add Store'}
+                  </button>
+                  <button
+                    onClick={() => setShowAddStore(false)}
+                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
-            ))}
+            </div>
+          )}
+
+          <p className="text-sm text-gray-500 mt-4">
+            Showing {filteredStores.length} of {stores.length} stores
+          </p>
+        </div>
+
+        {/* Stores Grid - Scrollable Container */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">All Stores</h2>
+          
+          <div className="max-h-[600px] overflow-y-auto pr-2">
+            {filteredStores.length === 0 ? (
+              <div className="text-center py-12">
+                <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 text-lg">No stores found</p>
+                <p className="text-gray-400 text-sm mt-1">Try adjusting your search</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredStores.map((store, index) => (
+                  <div
+                    key={index}
+                    className={`p-5 border-2 rounded-xl transition-all cursor-pointer ${
+                      currentStore.url === store.url
+                        ? 'border-blue-600 bg-blue-50 shadow-md'
+                        : 'border-gray-200 hover:border-blue-400 hover:bg-gray-50 hover:shadow-lg'
+                    }`}
+                    onClick={() => switchStore(store)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Store className={`w-4 h-4 flex-shrink-0 ${
+                            currentStore.url === store.url ? 'text-blue-600' : 'text-gray-400'
+                          }`} />
+                          <h3 className="font-bold text-gray-900 truncate">{store.name}</h3>
+                        </div>
+                        <p className="text-xs text-gray-600 break-all mb-3">
+                          {store.url}
+                        </p>
+                        {currentStore.url === store.url && (
+                          <span className="inline-block text-xs bg-blue-600 text-white px-3 py-1 rounded-full font-medium">
+                            Active Store
+                          </span>
+                        )}
+                      </div>
+                      {stores.length > 1 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteStore(stores.findIndex(s => s.url === store.url));
+                          }}
+                          className="text-red-600 hover:text-red-800 p-1.5 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0 ml-2"
+                          title="Delete store"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+          <div className="bg-white p-4 rounded-lg shadow">
+            <p className="text-sm text-gray-500">Total Stores</p>
+            <p className="text-2xl font-bold text-blue-600">{stores.length}</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <p className="text-sm text-gray-500">Active Store</p>
+            <p className="text-2xl font-bold text-green-600">1</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <p className="text-sm text-gray-500">Verified</p>
+            <p className="text-2xl font-bold text-purple-600">{stores.length}</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <p className="text-sm text-gray-500">Platform</p>
+            <p className="text-lg font-bold text-gray-900">Shopify</p>
+          </div>
+        </div>
+      </div>
+    </div>
         </div>
 
         {/* Statistics Dashboard */}
