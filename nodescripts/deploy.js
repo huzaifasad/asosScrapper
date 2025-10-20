@@ -262,16 +262,7 @@ function broadcastProgress(data) {
 // ============================================
 // SUPABASE (OPTIONAL)
 // ============================================
-const supabase = createClient(
-  process.env.SUPABASE_URL, 
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-);
+
 
 // ============================================
 // ASOS CATEGORIES
@@ -530,50 +521,7 @@ async function scrapeProduct(browser, link, index, total, categoryInfo = null, s
     }
 
     // Only save to DB if explicitly requested
-    if (saveToDb && supabase) {
-      try {
-        const { error } = await supabase.rpc("upsert_zara_product_v6", {
-          p_id: null,
-          p_product_name: data.name,
-          p_price: data.price,
-          p_colour: data.color,
-          p_description: data.description,
-          p_size: data.size || ['One Size'],
-          p_materials: data.materials ? [JSON.stringify({ description: data.materials })] : null,
-          p_availability: data.availability,
-          p_category_id: 0,
-          p_product_id: data.product_id,
-          p_colour_code: Math.floor(Math.random() * 1000),
-          p_section: null,
-          p_product_family: data.category?.toUpperCase() || "CLOTHING",
-          p_product_family_en: data.category || "Clothing",
-          p_product_subfamily: null,
-          p_care: data.care_info ? JSON.stringify({ info: data.care_info }) : null,
-          p_materials_description: data.materials,
-          p_dimension: null,
-          p_low_on_stock: !data.availability,
-          p_sku: null,
-          p_url: data.product_url,
-          p_currency: data.currency,
-          p_image: data.images?.length > 0 ? JSON.stringify(data.images.map(url => ({ url }))) : null,
-          p_you_may_also_like: null,
-          p_category_path: data.category_path || null,
-          p_scraped_category: data.scraped_category || null,
-          p_scrape_type: data.scrape_type || "ASOS",
-          p_brand: data.brand,
-          p_category: data.category,
-          p_stock_status: data.stock_status,
-          p_color: data.color,
-          p_images: data.images?.length > 0 ? JSON.stringify(data.images.map(url => ({ url }))) : null,
-          p_product_url: data.product_url,
-          p_care_info: data.care_info
-        });
-        
-        if (error) console.error('DB save error:', error);
-      } catch (e) {
-        console.error('DB operation failed:', e);
-      }
-    }
+   
 
     return data;
   } catch (err) {
