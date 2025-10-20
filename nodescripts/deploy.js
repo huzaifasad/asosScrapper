@@ -56,7 +56,7 @@ class BrowserPool {
 
   async createBrowser() {
     const browser = await puppeteer.launch({
-      headless: false,
+      headless: 'new',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -199,9 +199,11 @@ const scrapeLimiter = rateLimit({
 });
 
 function rapidAPIRateLimit(req, res, next) {
+  // For development/testing, allow requests without API key
+  const isDevelopment = process.env.NODE_ENV !== 'production';
   const apiKey = req.headers['x-rapidapi-key'] || req.headers['x-api-key'];
   
-  if (!apiKey) {
+  if (!apiKey && !isDevelopment) {
     return res.status(401).json({
       success: false,
       error: 'API key required',
@@ -209,7 +211,7 @@ function rapidAPIRateLimit(req, res, next) {
     });
   }
   
-  req.apiKey = apiKey;
+  req.apiKey = apiKey || 'development-key';
   next();
 }
 
@@ -794,7 +796,7 @@ app.get(`/api/${API_VERSION}/categories`, (req, res) => {
 });
 
 // Search products - JSON only (no DB save)
-app.post(`/api/${API_VERSION}/products/search`, scrapeLimiter, async (req, res) => {
+app.post(`/api/${API_VERSION}/products/search`, scrapeLimiter, rapidAPIRateLimit, async (req, res) => {
   const { searchTerm, mode = "limit", limit = 5, startIndex, endIndex, concurrency = 5, saveToDb = false } = req.body;
   
   if (!searchTerm) {
@@ -845,7 +847,7 @@ app.post(`/api/${API_VERSION}/products/search`, scrapeLimiter, async (req, res) 
 });
 
 // Scrape by category - JSON only (no DB save by default)
-app.post(`/api/${API_VERSION}/products/category`, scrapeLimiter, async (req, res) => {
+app.post(`/api/${API_VERSION}/products/category`, scrapeLimiter, rapidAPIRateLimit, async (req, res) => {
   const { categoryPath, mode = "limit", limit = 5, startIndex, endIndex, concurrency = 5, saveToDb = false } = req.body;
   
   if (!categoryPath) {
