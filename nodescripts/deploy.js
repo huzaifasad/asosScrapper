@@ -198,20 +198,30 @@ const scrapeLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// CRITICAL: Update your API to handle RapidAPI headers properly
 function rapidAPIRateLimit(req, res, next) {
-  // For development/testing, allow requests without API key
-  const isDevelopment = process.env.NODE_ENV !== 'production';
-  const apiKey = req.headers['x-rapidapi-key'] || req.headers['x-api-key'];
+  // RapidAPI sends these headers
+  const apiKey = req.headers['x-rapidapi-key'];
+  const proxySecret = req.headers['x-rapidapi-proxy-secret'];
+  const user = req.headers['x-rapidapi-user'];
+  const subscription = req.headers['x-rapidapi-subscription'];
   
-  if (!apiKey && !isDevelopment) {
+  // Validate RapidAPI request
+  if (!apiKey) {
     return res.status(401).json({
       success: false,
       error: 'API key required',
-      message: 'Please provide a valid API key in the X-RapidAPI-Key header'
+      message: 'Please subscribe to this API on RapidAPI'
     });
   }
   
-  req.apiKey = apiKey || 'development-key';
+  // Store user info for analytics
+  req.rapidapi = {
+    user,
+    subscription,
+    apiKey
+  };
+  
   next();
 }
 
@@ -222,7 +232,11 @@ app.use(helmet());
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 app.use(generalLimiter);
-
+app.use((req, res, next) => {
+  res.header('X-RapidAPI-Version', API_VERSION);
+  res.header('Access-Control-Allow-Headers', 'X-RapidAPI-Key, X-RapidAPI-Host, X-RapidAPI-User');
+  next();
+});
 // ============================================
 // WEBSOCKET
 // ============================================
