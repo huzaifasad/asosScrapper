@@ -274,11 +274,11 @@ export default function ScraperPage() {
   const fetchProductsFromDB = async () => {
     setLoading(true)
 
-    const { count } = await supabase.from("zara_cloth").select("*", { count: "exact", head: true })
+    const { count } = await supabase.from("zara_cloth_test_test").select("*", { count: "exact", head: true })
     setTotalProducts(count || 0)
 
     const { data, error } = await supabase
-      .from("zara_cloth")
+      .from("zara_cloth_test")
       .select("*")
       .order("created_at", { ascending: false })
       .range((currentPage - 1) * productsPerPage, currentPage * productsPerPage - 1)
